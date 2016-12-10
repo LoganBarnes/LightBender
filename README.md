@@ -1,5 +1,5 @@
 
 # Light Bender
 
-*Testbed for NVIDIA OptiX*
+Testbed for NVIDIA OptiX
 
