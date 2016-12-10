@@ -1,0 +1,27 @@
+# QT Creator #
+##############
+*.pro.user*
+*.qmake.stash
+*.txt.user*
+
+# Compiled Source #
+###################
+*.o
+build/
+
+# Executables #
+###############
+Renderer.app
+
+# OS Generated Files #
+######################
+*.DS_Store
+
+# Makefiles #
+#############
+Makefile
+
+# Valgrind #
+############
+*.supp
+
