@@ -10,10 +10,13 @@
 #include "graphics/glfw/GlfwWrapper.hpp"
 #include "graphics/opengl/OpenGLWrapper.hpp"
 #include "graphics/Camera.hpp"
+#include "io/ImguiCallback.hpp"
+#include "imgui.h"
 
 // project
 #include "LightBenderCallback.hpp"
 #include "LightBenderConfig.hpp"
+#include "OptixRenderer.hpp"
 
 
 namespace light
@@ -35,12 +38,12 @@ constexpr int defaultHeight = 720;
 /// \author Logan Barnes
 /////////////////////////////////////////////
 LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
-  : OpenGLIOHandler( world, true, defaultWidth, defaultHeight, false )
+  : ImguiOpenGLIOHandler( world, true, defaultWidth, defaultHeight, false )
 {
 
-  std::unique_ptr< shared::SharedCallback > upCallback( new LightBenderCallback( *this ) );
+  std::unique_ptr< graphics::Callback > upCallback( new LightBenderCallback( *this ) );
 
-  upGlfwWrapper_->setCallback( std::move( upCallback ) );
+  imguiCallback_->setCallback( std::move( upCallback ) );
 
 
   //
@@ -52,10 +55,10 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
   upGLWrapper_->setViewportSize( defaultWidth, defaultHeight );
 
   std::string vertShader = SHADER_PATH + "screenSpace/shader.vert";
-  std::string fragShader = SHADER_PATH + "blending/shader.frag";
+  std::string fragShader = SHADER_PATH + "screenSpace/shader.frag";
 
   upGLWrapper_->addProgram(
-                           "path",
+                           "fullscreenProgram",
                            vertShader.c_str( ),
                            fragShader.c_str( )
                            );
@@ -71,10 +74,20 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
 
   upGLWrapper_->addUVBuffer(
                             "screenBuffer",
-                            "path",
+                            "fullscreenProgram",
                             vbo.data( ),
                             vbo.size( )
                             );
+
+  upGLWrapper_->addTextureArray( "rayTex", defaultWidth, defaultHeight, 0 );
+
+
+  upRenderer_ = std::unique_ptr< RendererInterface >( new OptixRenderer(
+                                                                        defaultWidth,
+                                                                        defaultHeight,
+                                                                        upGLWrapper_->getVBO(
+                                                                                             "screenBuffer" )
+                                                                        ) );
 
 
   //
@@ -83,8 +96,6 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
 
   upCamera_->setAspectRatio( defaultWidth * 1.0f / defaultHeight );
   upCamera_->updateOrbit( 7.0f, 0.0f, 0.0f );
-
-
 
 }
 
@@ -96,16 +107,15 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
 /// \author Logan Barnes
 /////////////////////////////////////////////
 LightBenderIOHandler::~LightBenderIOHandler( )
-{
-}
+{}
 
 
 
 void
 LightBenderIOHandler::rotateCamera(
-                                double deltaX,
-                                double deltaY
-                                )
+                                   double deltaX,
+                                   double deltaY
+                                   )
 {
 
   upCamera_->updateOrbit( 0.f, static_cast< float >( deltaX ), static_cast< float >( deltaY ) );
@@ -124,12 +134,11 @@ LightBenderIOHandler::zoomCamera( double deltaZ )
 
 
 
-
 void
 LightBenderIOHandler::resize(
-                          int w,
-                          int h
-                          )
+                             int w,
+                             int h
+                             )
 {
 
   upGLWrapper_->setViewportSize( w, h );
@@ -149,10 +158,49 @@ void
 LightBenderIOHandler::onRender( const double )
 {
 
+  upRenderer_->renderWorld( *upCamera_ );
+
+//  optix::Buffer context
+
+//  glBindTexture( GL_TEXTURE_2D, upGLWrapper_->getTexture( "rayTex" ) );
+//  glBindBuffer( GL_PIXEL_UNPACK_BUFFER, upGLWrapper_->getVBO( "screenBuffer" ) );
+
+//  RTsize elmt_size = buffer
+
   upGLWrapper_->clearWindow( );
+
+  upGLWrapper_->useProgram  ( "fullscreenProgram" );
+
+  glm::vec2 screenSize(
+                       upGLWrapper_->getViewportWidth( ),
+                       upGLWrapper_->getViewportHeight( )
+                       );
+
+  upGLWrapper_->setFloatUniform(
+                                "fullscreenProgram",
+                                "screenSize",
+                                glm::value_ptr( screenSize ),
+                                2
+                                );
+
+  upGLWrapper_->renderBuffer( "screenBuffer", 4, GL_TRIANGLE_STRIP );
 
 } // LightBenderIOHandler::onRender
 
+
+
+void
+LightBenderIOHandler::onGuiRender( )
+{
+
+  bool alwaysTrue = true;
+
+  ImGui::SetNextWindowSize( ImVec2( 200, 100 ), alwaysTrue );
+  ImGui::Begin( "Another Window", &alwaysTrue );
+  ImGui::Text( "Hello" );
+  ImGui::End( );
+
+}
 
 
 

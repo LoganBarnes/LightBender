@@ -65,6 +65,13 @@ set(
 
     )
 
+set( PTX_SOURCE
+
+    ${SRC_DIR}/renderers/gpu/cuda/Parallelogram.cu
+    ${SRC_DIR}/renderers/gpu/cuda/Box.cu
+    ${SRC_DIR}/renderers/gpu/cuda/OptixRenderer.cu
+    )
+
 set(
     PROJECT_CUDA_INCLUDE_DIRS
 
@@ -72,6 +79,7 @@ set(
     ${SHARED_CUDA_INCLUDE_DIRS}
 
     ${SHARED_PATH}/src/cuda
+    ${SRC_DIR}/renderers
     )
 
 set(
@@ -94,11 +102,11 @@ set(
     )
 
 
-set(
-    CUDA_COMPUTE_FLAGS
-    "-gencode arch=compute_30,code=sm_30"
-    " -gencode arch=compute_35,code=sm_35"
-    )
+#set(
+#    CUDA_COMPUTE_FLAGS
+#    "-gencode arch=compute_30,code=sm_30"
+##    " -gencode arch=compute_35,code=sm_35"
+#    )
 
 set( USE_CUDA ON )
 
@@ -110,6 +118,8 @@ set(
     ${SHARED_INCLUDE_DIRS}
 
     ${SRC_DIR}/io
+    ${SRC_DIR}/renderers
+    ${SRC_DIR}/renderers/gpu
     )
 
 # cpp files
@@ -122,6 +132,9 @@ set(
     ${SHADER_PATH}/blending/shader.frag
 
     ${SHARED_SOURCE}
+    ${PTX_SOURCE}
+
+    ${SRC_DIR}/renderers/gpu/OptixRenderer.cpp
 
     ${SRC_DIR}/io/LightBenderIOHandler.cpp
     ${SRC_DIR}/io/LightBenderCallback.cpp
@@ -158,7 +171,4 @@ set(
 set( PROJECT_MAIN ${SRC_DIR}/exec/LightBender.cpp )
 
 include( ${SHARED_PATH}/cmake/DefaultProjectLibrary.cmake )
-
-
-
 
