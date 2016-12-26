@@ -12,7 +12,9 @@
 ###################
 *.o
 build/
-*.ptx # cuda
+
+# cuda
+*.ptx
 
 # Executables #
 ###############
