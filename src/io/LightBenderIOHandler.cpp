@@ -238,7 +238,7 @@ LightBenderIOHandler::_onGuiRender( )
 
   bool alwaysTrue = true;
 
-  ImGui::SetNextWindowSize( ImVec2( 350, 210 ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
+  ImGui::SetNextWindowSize( ImVec2( 350, 250 ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
 
   ImGui::Begin( "Light Bender Settings", &alwaysTrue );
 
@@ -282,13 +282,14 @@ LightBenderIOHandler::_onGuiRender( )
   //
   // Control listing
   //
-  if ( ImGui::CollapsingHeader( "Controls", "controls", false, false ) )
+  if ( ImGui::CollapsingHeader( "Controls", "controls", false, true ) )
   {
 
     ImGui::Text(
-                "Camera:\n\n"
-                "    Right Mouse     -    Rotate\n" \
-                "    Middle Mouse    -    Zoom\n"
+                "Camera Movement:\n\n"
+                "    Left Mouse      -    Rotate\n" \
+                "    Right Mouse     -    Zoom\n" \
+                "    Middle Scroll   -    Zoom\n"
                 );
 
   }
