@@ -2,7 +2,11 @@
 ##############
 *.pro.user*
 *.qmake.stash
-*.txt.user*
+*.user*
+*.config
+*.creator
+*.files
+*.includes
 
 # Compiled Source #
 ###################
