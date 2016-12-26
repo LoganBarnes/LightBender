@@ -3,7 +3,7 @@
 
 
 #include <string>
-#include "io/OpenGLIOHandler.hpp"
+#include "io/ImguiOpenGLIOHandler.hpp"
 
 
 namespace graphics
@@ -26,7 +26,7 @@ class World;
 namespace light
 {
 
-class PathTracer;
+class OptixRenderer;
 
 
 /////////////////////////////////////////////
@@ -34,7 +34,7 @@ class PathTracer;
 ///
 /// \author Logan Barnes
 /////////////////////////////////////////////
-class LightBenderIOHandler : public shared::OpenGLIOHandler
+class LightBenderIOHandler : public shared::ImguiOpenGLIOHandler
 {
 
 public:
@@ -69,8 +69,18 @@ protected:
 private:
 
   virtual
-  void onRender ( const double alpha ) final;
+  void _onRender ( const double alpha ) final;
 
+  virtual
+  void _onGuiRender( ) final;
+
+
+  void _setScene( );
+
+
+  std::unique_ptr< OptixRenderer > upRenderer_;
+
+  int currentScene_;
 
 
 };
