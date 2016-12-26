@@ -30,10 +30,10 @@ LightBenderCallback::~LightBenderCallback( )
 ///
 void
 LightBenderCallback::handleWindowSize(
-                                   GLFWwindow*,
-                                   int width,
-                                   int height
-                                   )
+                                      GLFWwindow*,
+                                      int width,
+                                      int height
+                                      )
 {
 
   handler_.resize( width, height );
@@ -44,11 +44,11 @@ LightBenderCallback::handleWindowSize(
 
 void
 LightBenderCallback::handleMouseButton(
-                                    GLFWwindow *pWindow,
-                                    int         button,
-                                    int         action,
-                                    int
-                                    )
+                                       GLFWwindow *pWindow,
+                                       int         button,
+                                       int         action,
+                                       int
+                                       )
 {
 
   if ( button == GLFW_MOUSE_BUTTON_1 )
@@ -94,12 +94,12 @@ LightBenderCallback::handleMouseButton(
 
 void
 LightBenderCallback::handleKey(
-                            GLFWwindow *pWindow,
-                            int         key,
-                            int,
-                            int         action,
-                            int
-                            )
+                               GLFWwindow *pWindow,
+                               int         key,
+                               int,
+                               int         action,
+                               int
+                               )
 {
   switch ( key )
   {
@@ -145,16 +145,22 @@ LightBenderCallback::handleKey(
 //void LightBenderCallback::handleCursorPosition(GLFWwindow *window, double xpos, double ypos)
 void
 LightBenderCallback::handleCursorPosition(
-                                       GLFWwindow*,
-                                       double xpos,
-                                       double ypos
-                                       )
+                                          GLFWwindow*,
+                                          double xpos,
+                                          double ypos
+                                          )
 {
 
   if ( leftMouseDown_ )
   {
 
     handler_.rotateCamera( prevX_ - xpos, prevY_ - ypos );
+
+  }
+  else if ( rightMouseDown_ )
+  {
+
+    handler_.zoomCamera( prevY_ - ypos );
 
   }
 
@@ -168,10 +174,10 @@ LightBenderCallback::handleCursorPosition(
 //void LightBenderCallback::handleScroll(GLFWwindow* widnow, double xoffset, double yoffset)
 void
 LightBenderCallback::handleScroll(
-                               GLFWwindow*,
-                               double,
-                               double yoffset
-                               )
+                                  GLFWwindow*,
+                                  double,
+                                  double yoffset
+                                  )
 {
 
   handler_.zoomCamera( yoffset );

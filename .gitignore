@@ -12,10 +12,11 @@
 ###################
 *.o
 build/
+*.ptx # cuda
 
 # Executables #
 ###############
-Renderer.app
+*.app
 
 # OS Generated Files #
 ######################
