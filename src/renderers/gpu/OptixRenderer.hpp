@@ -2,7 +2,7 @@
 #define OptixRenderer_hpp
 
 
-#include "optix/optixu/optixpp_namespace.h"
+#include "optixu/optixpp_namespace.h"
 #include "RendererInterface.hpp"
 #include "glm/glm.hpp"
 

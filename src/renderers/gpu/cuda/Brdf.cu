@@ -1,4 +1,4 @@
-#include "optix/optix.h"
+#include "optix.h"
 #include "RendererObjects.hpp"
 
 

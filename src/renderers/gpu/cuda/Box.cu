@@ -18,10 +18,10 @@
  * SUCH DAMAGES
  */
 
-#include "optix/optix.h"
-#include "optix/optixu/optixu_math_namespace.h"
-#include "optix/optixu/optixu_matrix_namespace.h"
-#include "optix/optixu/optixu_aabb_namespace.h"
+#include "optix.h"
+#include "optixu/optixu_math_namespace.h"
+#include "optixu/optixu_matrix_namespace.h"
+#include "optixu/optixu_aabb_namespace.h"
 
 
 rtDeclareVariable( float3,     boxmin,           , );

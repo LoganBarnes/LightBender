@@ -1,6 +1,6 @@
 
-#include "optix/optix.h"
-#include "optix/optix_math.h"
+#include "optix.h"
+#include "optix_math.h"
 // Used by all the tutorial cuda files
 //#include "commonStructs.h"
 
