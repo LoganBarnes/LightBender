@@ -16,6 +16,14 @@ namespace light
 class WorldScene;
 
 
+struct RenderPackage
+{
+
+  graphics::Camera *pCamera;
+
+};
+
+
 /////////////////////////////////////////////
 /// \brief The RendererInterface class
 ///
@@ -36,6 +44,9 @@ public:
     : width_ ( width  )
     , height_( height )
   {}
+
+  virtual
+  ~RendererInterface( ) {}
 
   virtual
   void resize (

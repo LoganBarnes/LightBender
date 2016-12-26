@@ -1,5 +1,5 @@
-#ifndef OptixBoxScene_hpp
-#define OptixBoxScene_hpp
+#ifndef OptixSphereScene_hpp
+#define OptixSphereScene_hpp
 
 
 #include "OptixRenderer.hpp"
@@ -10,30 +10,30 @@ namespace light
 
 
 /////////////////////////////////////////////
-/// \brief The OptixBoxScene class
+/// \brief The OptixSphereScene class
 ///
 /// \author Logan Barnes
 /////////////////////////////////////////////
-class OptixBoxScene : public OptixRenderer
+class OptixSphereScene : public OptixRenderer
 {
 
 public:
 
   ///////////////////////////////////////////////////////////////
-  /// \brief OptixBoxScene
+  /// \brief OptixSphereScene
   ///////////////////////////////////////////////////////////////
-  OptixBoxScene(
-                int      width,
-                int      height,
-                unsigned vbo
-                );
+  OptixSphereScene(
+                   int      width,
+                   int      height,
+                   unsigned vbo
+                   );
 
 
   ///////////////////////////////////////////////////////////////
-  /// \brief ~OptixBoxScene
+  /// \brief ~OptixSphereScene
   ///////////////////////////////////////////////////////////////
   virtual
-  ~OptixBoxScene( );
+  ~OptixSphereScene( );
 
 
 protected:
@@ -50,4 +50,4 @@ private:
 } // namespace light
 
 
-#endif // OptixBoxScene_hpp
+#endif // OptixSphereScene_hpp

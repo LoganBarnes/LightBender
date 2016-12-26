@@ -69,7 +69,8 @@ set( PTX_SOURCE
 
     ${SRC_DIR}/renderers/gpu/cuda/Parallelogram.cu
     ${SRC_DIR}/renderers/gpu/cuda/Box.cu
-    ${SRC_DIR}/renderers/gpu/cuda/OptixRenderer.cu
+    ${SRC_DIR}/renderers/gpu/cuda/Cameras.cu
+    ${SRC_DIR}/renderers/gpu/cuda/Brdf.cu
     )
 
 set(
@@ -135,6 +136,8 @@ set(
     ${PTX_SOURCE}
 
     ${SRC_DIR}/renderers/gpu/OptixRenderer.cpp
+    ${SRC_DIR}/renderers/gpu/OptixBoxScene.cpp
+    ${SRC_DIR}/renderers/gpu/OptixSphereScene.cpp
 
     ${SRC_DIR}/io/LightBenderIOHandler.cpp
     ${SRC_DIR}/io/LightBenderCallback.cpp

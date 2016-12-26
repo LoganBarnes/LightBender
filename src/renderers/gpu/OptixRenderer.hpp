@@ -34,7 +34,9 @@ public:
   ///////////////////////////////////////////////////////////////
   /// \brief ~OptixRenderer
   ///////////////////////////////////////////////////////////////
+  virtual
   ~OptixRenderer( );
+
 
   virtual
   void resize (
@@ -44,6 +46,9 @@ public:
 
   virtual
   void renderWorld ( const graphics::Camera &camera ) final;
+
+
+  optix::Buffer getBuffer( );
 
 
   glm::vec3 background_color;
@@ -62,6 +67,7 @@ private:
 //  bool   m_use_pbo_buffer;
 //  int    m_num_devices;
 //  bool   m_cpu_rendering_enabled;
+
 
   unsigned int width_;
   unsigned int height_;

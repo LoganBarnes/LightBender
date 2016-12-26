@@ -1,4 +1,4 @@
-#include "OptixBoxScene.hpp"
+#include "OptixSphereScene.hpp"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
 
@@ -8,13 +8,13 @@ namespace light
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::OptixBoxScene
+/// \brief OptixSphereScene::OptixSphereScene
 ///////////////////////////////////////////////////////////////
-OptixBoxScene::OptixBoxScene(
-                             int      width,
-                             int      height,
-                             unsigned vbo
-                             )
+OptixSphereScene::OptixSphereScene(
+                                   int      width,
+                                   int      height,
+                                   unsigned vbo
+                                   )
   : OptixRenderer( width, height, vbo )
 
 {
@@ -29,18 +29,18 @@ OptixBoxScene::OptixBoxScene(
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::~OptixBoxScene
+/// \brief OptixSphereScene::~OptixSphereScene
 ///////////////////////////////////////////////////////////////
-OptixBoxScene::~OptixBoxScene( )
+OptixSphereScene::~OptixSphereScene( )
 {}
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::_buildScene
+/// \brief OptixSphereScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixBoxScene::_buildScene( )
+OptixSphereScene::_buildScene( )
 {
 
   std::string box_ptx( light::RES_PATH + "ptx/cudaLightBender_generated_Box.cu.ptx" );
@@ -52,8 +52,8 @@ OptixBoxScene::_buildScene( )
   box->setPrimitiveCount( 1u );
   box->setBoundingBoxProgram( box_bounds );
   box->setIntersectionProgram( box_intersect );
-  box[ "boxmin" ]->setFloat( -2.0f, -3.0f, -2.0f );
-  box[ "boxmax" ]->setFloat(  2.0f,  4.0f,  2.0f );
+  box[ "boxmin" ]->setFloat( -4.0f, -1.5f, -4.0f );
+  box[ "boxmax" ]->setFloat(  4.0f,  2.0f,  4.0f );
 
   // Materials
   std::string brdfPtxFile(
@@ -81,7 +81,7 @@ OptixBoxScene::_buildScene( )
 
   context_[ "top_object" ]->set( geometrygroup );
 
-} // OptixBoxScene::_buildScene
+} // OptixSphereScene::_buildScene
 
 
 

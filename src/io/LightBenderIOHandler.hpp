@@ -26,7 +26,7 @@ class World;
 namespace light
 {
 
-class RendererInterface;
+class OptixRenderer;
 
 
 /////////////////////////////////////////////
@@ -69,14 +69,18 @@ protected:
 private:
 
   virtual
-  void onRender ( const double alpha ) final;
+  void _onRender ( const double alpha ) final;
 
   virtual
-  void onGuiRender( ) final;
+  void _onGuiRender( ) final;
 
 
-  std::unique_ptr< RendererInterface > upRenderer_;
+  void _setScene( );
 
+
+  std::unique_ptr< OptixRenderer > upRenderer_;
+
+  int currentScene_;
 
 
 };
