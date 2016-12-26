@@ -238,7 +238,7 @@ LightBenderIOHandler::_onGuiRender( )
 
   bool alwaysTrue = true;
 
-  ImGui::SetNextWindowSize( ImVec2( 350, 200 ), alwaysTrue /*ImGuiSetCond_FirstUseEver*/ );
+  ImGui::SetNextWindowSize( ImVec2( 350, 210 ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
 
   ImGui::Begin( "Light Bender Settings", &alwaysTrue );
 
