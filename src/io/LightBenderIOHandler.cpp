@@ -78,7 +78,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                             "screenBuffer",
                             "fullscreenProgram",
                             vboData.data( ),
-                            vboData.size( )
+                            static_cast< GLuint >( vboData.size( ) )
                             );
 
   upGLWrapper_->addTextureArray( "rayTex", defaultWidth, defaultHeight, 0 );
@@ -201,8 +201,8 @@ LightBenderIOHandler::_onRender( const double )
                                       "rayTex",
                                       buffer->getGLBOId( ),
                                       alignmentSize,
-                                      bufWidth,
-                                      bufHeight
+                                      static_cast< int >( bufWidth ),
+                                      static_cast< int >( bufHeight )
                                       );
 
   }
