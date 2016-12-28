@@ -46,7 +46,7 @@ private:
   void _buildGeometry ( );
   void _addLights ( );
 
-  optix::Material boxMaterial_;
+  optix::Material sceneMaterial_;
 
   std::vector< optix::Program > materialPrograms_;
 

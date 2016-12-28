@@ -38,6 +38,9 @@ public:
   ~OptixRenderer( );
 
 
+  void setCameraType( int type );
+
+
   virtual
   void resize (
                int w,

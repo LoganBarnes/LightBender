@@ -23,10 +23,12 @@ void
 closest_hit_normals( )
 {
 
-  prd_radiance.result = normalize( rtTransformNormal(
-                                                     RT_OBJECT_TO_WORLD,
-                                                     shading_normal
-                                                     ) ) * 0.5f + 0.5f;
+  float3 world_geo_normal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
+  float3 world_shade_normal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
+  float3 ffnormal           = faceforward( world_shade_normal, -ray.direction, world_geo_normal );
+
+  prd_radiance.result = ffnormal * 0.5f + 0.5f;
+
 }
 
 

@@ -31,6 +31,7 @@ constexpr int defaultWidth  = 1280;
 constexpr int defaultHeight = 720;
 
 int displayType = 1;
+int cameraType  = 0;
 
 }
 
@@ -241,6 +242,7 @@ LightBenderIOHandler::_onGuiRender( )
   bool alwaysTrue = true;
 
   ImGui::SetNextWindowSize( ImVec2( 345, defaultHeight * 1.0f ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
+  ImGui::SetNextWindowPos ( ImVec2( 0, 0 ), ImGuiSetCond_FirstUseEver );
 
   ImGui::Begin( "Light Bender Settings", &alwaysTrue );
 
@@ -253,18 +255,11 @@ LightBenderIOHandler::_onGuiRender( )
               ImGui::GetIO( ).Framerate
               );
 
-  ImGui::Separator( );
-
-  glm::vec3 eye ( upCamera_->getEye( )  );
-  glm::vec3 look( upCamera_->getLook( ) );
-  ImGui::Text( "EYE:  %2.2f, %2.2f, %2.2f",    eye.x,  eye.y,  eye.z  );
-  ImGui::Text( "LOOK:  %1.2f,  %1.2f,  %1.2f", look.x, look.y, look.z );
-
 
   //
   // Scene selction
   //
-  if ( ImGui::CollapsingHeader( "Scene Selection", "scene", false, true ) )
+  if ( ImGui::CollapsingHeader( "Scene", "scene", false, true ) )
   {
 
     int oldScene = currentScene_;
@@ -277,6 +272,25 @@ LightBenderIOHandler::_onGuiRender( )
       _setScene( );
 
     }
+
+    ImGui::Separator( );
+    ImGui::Text( "Camera" );
+
+    int oldCamera = cameraType;
+
+    ImGui::Combo( "", &cameraType, " Perspective \0 Orthographic \0\0" );
+
+    if ( oldCamera != cameraType )
+    {
+
+      upRenderer_->setCameraType( cameraType );
+
+    }
+
+    glm::vec3 eye ( upCamera_->getEye( )  );
+    glm::vec3 look( upCamera_->getLook( ) );
+    ImGui::Text( "EYE:  %2.2f, %2.2f, %2.2f",    eye.x,  eye.y,  eye.z  );
+    ImGui::Text( "LOOK:  %1.2f,  %1.2f,  %1.2f", look.x, look.y, look.z );
 
   }
 

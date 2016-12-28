@@ -57,7 +57,7 @@ OptixRenderer::OptixRenderer(
   //
   // What to do when something messes up
   //
-  context_[ "bad_color" ]->setFloat( error_color.r, error_color.g, error_color.b );
+  context_[ "error_color" ]->setFloat( error_color.r, error_color.g, error_color.b );
   context_->setExceptionProgram( 0, context_->createProgramFromPTXFile(
                                                                        defaultPtxFile,
                                                                        "exception"
@@ -96,6 +96,40 @@ OptixRenderer::~OptixRenderer( )
   context_ = nullptr;
 
 }
+
+
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixBoxScene::setCameraType
+/// \param type
+///////////////////////////////////////////////////////////////
+void
+OptixRenderer::setCameraType( int type )
+{
+
+  std::string cameraPtxFile(
+                             light::RES_PATH
+                             + "ptx/cudaLightBender_generated_Cameras.cu.ptx"
+                             );
+
+  std::string camera( "pinhole_camera" );
+
+  if ( type == 1 )
+  {
+
+    camera = "orthographic_camera";
+
+  }
+
+  context_->setRayGenerationProgram( 0, context_->createProgramFromPTXFile(
+                                                                           cameraPtxFile,
+                                                                           camera
+                                                                           ) );
+
+}
+
 
 
 

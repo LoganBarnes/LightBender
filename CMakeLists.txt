@@ -73,8 +73,10 @@ set(
 
 set( PTX_SOURCE
 
-    ${SRC_DIR}/renderers/gpu/cuda/Parallelogram.cu
-    ${SRC_DIR}/renderers/gpu/cuda/Box.cu
+    ${SRC_DIR}/renderers/gpu/cuda/primitives/Parallelogram.cu
+    ${SRC_DIR}/renderers/gpu/cuda/primitives/Box.cu
+    ${SRC_DIR}/renderers/gpu/cuda/primitives/Sphere.cu
+
     ${SRC_DIR}/renderers/gpu/cuda/Cameras.cu
     ${SRC_DIR}/renderers/gpu/cuda/Brdf.cu
     )

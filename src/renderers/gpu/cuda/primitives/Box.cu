@@ -121,7 +121,7 @@ box_bounds(
            )
 {
 
-  optix::Aabb *aabb = reinterpret_cast< optix::Aabb* >( result );
-  aabb->set( boxmin, boxmax );
+  optix::Aabb *pAabb = reinterpret_cast< optix::Aabb* >( result );
+  pAabb->set( boxmin, boxmax );
 
 }
