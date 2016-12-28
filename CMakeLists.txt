@@ -21,6 +21,9 @@ set( SHARED_PATH ${PROJECT_SOURCE_DIR}/shared )
 set( RES_PATH    ${PROJECT_SOURCE_DIR}/res    )
 set( SHADER_PATH ${SHARED_PATH}/shaders       )
 
+set( INPUT_PATH  ${PROJECT_SOURCE_DIR}/run/input  )
+set( OUTPUT_PATH ${PROJECT_SOURCE_DIR}/run/output )
+
 set( PROJECT_CONFIG_FILE ${SHARED_PATH}/src/common/ProjectConfig.hpp.in )
 
 
