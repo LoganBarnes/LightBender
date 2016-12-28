@@ -47,7 +47,7 @@ void
 OptixBoxScene::setDisplayType( int type )
 {
 
-  boxMaterial_->setClosestHitProgram( 0, materialPrograms_[ type ] );
+  boxMaterial_->setClosestHitProgram( 0, materialPrograms_[ static_cast< size_t >( type ) ] );
 
 }
 
@@ -117,8 +117,8 @@ OptixBoxScene::_addLights( )
 {
 
   std::vector< BasicLight > lights = {
-    { optix::make_float3( 10.0f, 30.0f, 20.0f ),
-      optix::make_float3( 500.0f, 500.0f, 500.0f ), 1 }
+    { optix::make_float3(  10.0f, 30.0f, 20.0f ), optix::make_float3( 500.0f, 500.0f, 500.0f ), 1, 0 },
+    { optix::make_float3( -10.0f, 20.0f, 15.0f ), optix::make_float3( 300.0f, 300.0f, 300.0f ), 1, 0 }
   };
 
   optix::Buffer lightBuffer = context_->createBuffer( RT_BUFFER_INPUT );
