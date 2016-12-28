@@ -17,7 +17,7 @@ OptixBoxScene::OptixBoxScene(
                              int      height,
                              unsigned vbo
                              )
-  : OptixRenderer( width, height, vbo )
+  : OptixScene( width, height, vbo )
 
 {
 
@@ -61,54 +61,23 @@ OptixBoxScene::_buildGeometry( )
 {
 
   // Create box
-  std::string box_ptx( light::RES_PATH + "ptx/cudaLightBender_generated_Box.cu.ptx" );
-  optix::Program box_bounds    = context_->createProgramFromPTXFile( box_ptx, "box_bounds" );
-  optix::Program box_intersect = context_->createProgramFromPTXFile( box_ptx, "box_intersect" );
-
-  optix::Geometry box = context_->createGeometry( );
-  box->setPrimitiveCount( 1u );
-  box->setBoundingBoxProgram( box_bounds );
-  box->setIntersectionProgram( box_intersect );
-  box[ "boxmin" ]->setFloat( -2.0f, -1.0f, -1.0f );
-  box[ "boxmax" ]->setFloat( -4.0f,  1.0f,  1.0f );
+  optix::Geometry box = createBoxPrimitive(
+                                           optix::      make_float3( -2.0f, -1.0f,   -1.0f ),
+                                           optix::      make_float3( -4.0f, 1.0f, 1.0f )
+                                           );
 
   // Create sphere
-  std::string sphere_ptx( light::RES_PATH + "ptx/cudaLightBender_generated_Sphere.cu.ptx" );
-  optix::Program sphere_bounds    = context_->createProgramFromPTXFile( sphere_ptx, "bounds" );
-  optix::Program sphere_intersect = context_->createProgramFromPTXFile( sphere_ptx, "intersect" );
-
-  optix::Geometry sphere = context_->createGeometry( );
-  sphere->setPrimitiveCount( 1u );
-  sphere->setBoundingBoxProgram ( sphere_bounds );
-  sphere->setIntersectionProgram( sphere_intersect );
-  sphere[ "sphere" ]->setFloat( 3.0f, 0.0f, 0.0f, 1.0f );
+  optix::Geometry sphere = createSpherePrimitive(
+                                                 optix::make_float3( 3.0f, 0.0f, 0.0f ),
+                                                 1.0f
+                                                 );
 
   // Create quad
-  std::string quad_ptx( light::RES_PATH + "ptx/cudaLightBender_generated_Parallelogram.cu.ptx" );
-  optix::Program quad_bounds    = context_->createProgramFromPTXFile( quad_ptx, "bounds" );
-  optix::Program quad_intersect = context_->createProgramFromPTXFile( quad_ptx, "intersect" );
-
-  optix::Geometry quad = context_->createGeometry( );
-  quad->setPrimitiveCount( 1u );
-  quad->setBoundingBoxProgram( quad_bounds );
-  quad->setIntersectionProgram( quad_intersect );
-
-  optix::float3 anchor = optix::make_float3( -1, -1,  0 );
-  optix::float3 v1     = optix::make_float3(  2,  0,  0 );
-  optix::float3 v2     = optix::make_float3(  0,  2,  0 );
-  optix::float3 normal = optix::cross( v1, v2 );
-
-  normal = normalize( normal );
-
-  float d = dot( normal, anchor );
-  v1 *= 1.0f / dot( v1, v1 );
-  v2 *= 1.0f / dot( v2, v2 );
-  optix::float4 plane = optix::make_float4( normal, d );
-
-  quad[ "plane"  ]->setFloat( plane.x, plane.y, plane.z, plane.w );
-  quad[ "v1"     ]->setFloat( v1.x, v1.y, v1.z );
-  quad[ "v2"     ]->setFloat( v2.x, v2.y, v2.z );
-  quad[ "anchor" ]->setFloat( anchor.x, anchor.y, anchor.z );
+  optix::Geometry quad = createQuadPrimitive(
+                                             optix::make_float3( -1, -1, 0 ),
+                                             optix::make_float3(  2, 0,  0 ),
+                                             optix::make_float3(  0, 2,  0 )
+                                             );
 
   // Materials
   std::string brdfPtxFile(

@@ -144,6 +144,7 @@ set(
     ${PTX_SOURCE}
 
     ${SRC_DIR}/renderers/gpu/OptixRenderer.cpp
+    ${SRC_DIR}/renderers/gpu/OptixScene.cpp
     ${SRC_DIR}/renderers/gpu/OptixBoxScene.cpp
     ${SRC_DIR}/renderers/gpu/OptixSphereScene.cpp
 

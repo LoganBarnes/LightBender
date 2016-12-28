@@ -278,7 +278,7 @@ LightBenderIOHandler::_onGuiRender( )
 
     int oldCamera = cameraType;
 
-    ImGui::Combo( "", &cameraType, " Perspective \0 Orthographic \0\0" );
+    ImGui::Combo( " ", &cameraType, " Perspective \0 Orthographic \0\0" );
 
     if ( oldCamera != cameraType )
     {

@@ -2,7 +2,7 @@
 #define OptixBoxScene_hpp
 
 
-#include "OptixRenderer.hpp"
+#include "OptixScene.hpp"
 #include <vector>
 
 
@@ -15,7 +15,7 @@ namespace light
 ///
 /// \author Logan Barnes
 /////////////////////////////////////////////
-class OptixBoxScene : public OptixRenderer
+class OptixBoxScene : public OptixScene
 {
 
 public:
