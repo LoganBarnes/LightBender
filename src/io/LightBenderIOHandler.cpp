@@ -27,8 +27,10 @@ namespace light
 namespace
 {
 
-constexpr int defaultWidth  = 1080;
+constexpr int defaultWidth  = 1280;
 constexpr int defaultHeight = 720;
+
+int displayType = 1;
 
 }
 
@@ -238,7 +240,7 @@ LightBenderIOHandler::_onGuiRender( )
 
   bool alwaysTrue = true;
 
-  ImGui::SetNextWindowSize( ImVec2( 350, 250 ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
+  ImGui::SetNextWindowSize( ImVec2( 345, defaultHeight * 1.0f ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
 
   ImGui::Begin( "Light Bender Settings", &alwaysTrue );
 
@@ -273,6 +275,30 @@ LightBenderIOHandler::_onGuiRender( )
     {
 
       _setScene( );
+
+    }
+
+  }
+
+  //
+  // Box Scene
+  //
+  if ( currentScene_ == 0 )
+  {
+
+    if ( ImGui::CollapsingHeader( "Box Scene", "box", false, true ) )
+    {
+
+      int oldDisplay = displayType;
+
+      ImGui::Combo( "Display", &displayType, " Normals \0 Simple Shading \0\0" );
+
+      if ( oldDisplay != displayType )
+      {
+
+        reinterpret_cast< OptixBoxScene* >( upRenderer_.get() )->setDisplayType( displayType );
+
+      }
 
     }
 
@@ -325,7 +351,11 @@ LightBenderIOHandler::_setScene( )
                                                             defaultHeight,
                                                             upGLWrapper_->getBuffer( "renderBuffer" )
                                                             ) );
+
+    reinterpret_cast< OptixBoxScene* >( upRenderer_.get() )->setDisplayType( displayType );
+
     break;
+
 
   case 1:
 
@@ -338,8 +368,11 @@ LightBenderIOHandler::_setScene( )
                                                                ) );
     break;
 
+
   default:
+
     throw std::runtime_error( "Unknown scene" );
+
     break;
 
   } // switch

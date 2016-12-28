@@ -1,6 +1,8 @@
 #include "OptixBoxScene.hpp"
+#include <optixu/optixu_math_stream_namespace.h>
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
+#include "commonStructs.h"
 
 
 namespace light
@@ -19,7 +21,8 @@ OptixBoxScene::OptixBoxScene(
 
 {
 
-  _buildScene( );
+  _buildGeometry( );
+  _addLights( );
 
   context_->validate( );
   context_->compile( );
@@ -37,10 +40,24 @@ OptixBoxScene::~OptixBoxScene( )
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::_buildScene
+/// \brief OptixBoxScene::setDisplayType
+/// \param type
 ///////////////////////////////////////////////////////////////
 void
-OptixBoxScene::_buildScene( )
+OptixBoxScene::setDisplayType( int type )
+{
+
+  boxMaterial_->setClosestHitProgram( 0, materialPrograms_[ type ] );
+
+}
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixBoxScene::_buildGeometry
+///////////////////////////////////////////////////////////////
+void
+OptixBoxScene::_buildGeometry( )
 {
 
   std::string box_ptx( light::RES_PATH + "ptx/cudaLightBender_generated_Box.cu.ptx" );
@@ -61,17 +78,24 @@ OptixBoxScene::_buildScene( )
                           + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
                           );
 
-  optix::Material box_matl = context_->createMaterial( );
-  optix::Program box_ch    = context_->createProgramFromPTXFile(
-                                                                brdfPtxFile,
-                                                                "closest_hit_normals"
-                                                                );
-  box_matl->setClosestHitProgram( 0, box_ch );
+  boxMaterial_ = context_->createMaterial( );
+
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "closest_hit_normals"
+                                                                  ) );
+
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "closest_hit_simple_shading"
+                                                                  ) );
+
+  boxMaterial_->setClosestHitProgram( 0, materialPrograms_.back( ) );
 
 
   // Create GIs for each piece of geometry
   std::vector< optix::GeometryInstance > gis;
-  gis.push_back( context_->createGeometryInstance( box, &box_matl, &box_matl + 1 ) );
+  gis.push_back( context_->createGeometryInstance( box, &boxMaterial_, &boxMaterial_ + 1 ) );
 
   // Place all in group
   optix::GeometryGroup geometrygroup = context_->createGeometryGroup( );
@@ -81,7 +105,33 @@ OptixBoxScene::_buildScene( )
 
   context_[ "top_object" ]->set( geometrygroup );
 
-} // OptixBoxScene::_buildScene
+} // OptixBoxScene::_buildGeometry
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixBoxScene::_addLights
+///////////////////////////////////////////////////////////////
+void
+OptixBoxScene::_addLights( )
+{
+
+  std::vector< BasicLight > lights = {
+    { optix::make_float3( 10.0f, 30.0f, 20.0f ),
+      optix::make_float3( 500.0f, 500.0f, 500.0f ), 1 }
+  };
+
+  optix::Buffer lightBuffer = context_->createBuffer( RT_BUFFER_INPUT );
+
+  lightBuffer->setFormat( RT_FORMAT_USER );
+  lightBuffer->setElementSize( sizeof( lights[ 0 ] ) );
+  lightBuffer->setSize( lights.size( ) );
+  memcpy( lightBuffer->map( ), lights.data( ), lights.size( ) * sizeof( lights[ 0 ] ) );
+  lightBuffer->unmap( );
+
+  context_[ "lights" ]->set( lightBuffer );
+
+} // OptixBoxScene::_addLights
 
 
 

@@ -3,6 +3,7 @@
 
 
 #include "OptixRenderer.hpp"
+#include <vector>
 
 
 namespace light
@@ -35,12 +36,19 @@ public:
   virtual
   ~OptixBoxScene( );
 
+  void setDisplayType( int type );
+
 
 protected:
 
 private:
 
-  void _buildScene ( );
+  void _buildGeometry ( );
+  void _addLights ( );
+
+  optix::Material boxMaterial_;
+
+  std::vector< optix::Program > materialPrograms_;
 
 
 

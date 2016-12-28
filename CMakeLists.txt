@@ -4,6 +4,9 @@ project ( LightBender )
 
 option( BUILD_TESTS OFF "Build unit tests created with gmock/gtest framework" )
 
+if ( MSVC )
+  add_definitions( -DNOMINMAX )
+endif( )
 
 # namespace used for project
 set ( PROJECT_NAMESPACE light )
