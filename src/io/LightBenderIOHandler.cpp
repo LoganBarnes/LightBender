@@ -391,6 +391,8 @@ LightBenderIOHandler::_setScene( )
 
   } // switch
 
+  upRenderer_->setCameraType( cameraType );
+
 } // LightBenderIOHandler::_setScene
 
 
