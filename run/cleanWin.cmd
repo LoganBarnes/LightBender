@@ -1,0 +1,23 @@
+@ECHO OFF
+
+IF NOT EXIST _build GOTO PASSBUILDDIR
+rmdir _build /s /q
+:PASSBUILDDIR
+
+IF NOT EXIST bin GOTO PASSBINDIR
+rmdir bin /s /q
+:PASSBINDIR
+
+IF NOT EXIST lib GOTO PASSLIBDIR
+rmdir lib /s /q
+:PASSLIBDIR
+
+IF NOT EXIST libbin GOTO PASSLIBBINDIR
+rmdir libbin /s /q
+:PASSLIBBINDIR
+
+IF NOT EXIST include GOTO PASSINCLUDEDIR
+rmdir include /s /q
+:PASSINCLUDEDIR
+
+echo Project clean

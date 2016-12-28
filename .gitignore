@@ -28,6 +28,16 @@ build/
 #############
 Makefile
 
+
+# Run Install Dirs #
+####################
+run/_build
+run/bin
+run/include
+run/lib
+*.ini
+run/output/*
+
 # Valgrind #
 ############
 *.supp
