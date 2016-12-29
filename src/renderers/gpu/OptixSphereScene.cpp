@@ -107,7 +107,6 @@ OptixSphereScene::_buildGeometry( )
 
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
-
   context_[ "top_object"   ]->set( topGroup );
   context_[ "top_shadower" ]->set( topGroup );
 
@@ -124,15 +123,15 @@ OptixSphereScene::_addLights( )
 
   std::vector< BasicLight > lights = {
     { optix::make_float3(  10.0f, 30.0f, 20.0f ),
-      optix::make_float3( 500.0f, 500.0f, 500.0f ),
+      optix::make_float3( 2000.0f ),
       1, 0 },
 
     { optix::make_float3( -10.0f, 20.0f, 15.0f ),
-      optix::make_float3( 300.0f, 300.0f, 300.0f ),
+      optix::make_float3( 900.0f ),
       1, 0 },
 
     { optix::make_float3( 0.0f, 2.0f, -35.0f ),
-      optix::make_float3( 100.0f, 100.0f, 100.0f ),
+      optix::make_float3( 400.0f ),
       1, 0 }
   };
 

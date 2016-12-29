@@ -38,6 +38,11 @@ OptixScene::OptixScene(
                                                                  "closest_hit_simple_shading"
                                                                  ) );
 
+  displayPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 "closest_hit_bsdf"
+                                                                 ) );
+
   sceneMaterial_->setClosestHitProgram( 0, displayPrograms_.back( ) );
 
   // for shadowing

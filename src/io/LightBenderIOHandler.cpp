@@ -30,7 +30,7 @@ namespace
 constexpr int defaultWidth  = 1280;
 constexpr int defaultHeight = 720;
 
-int displayType = 1;
+int displayType = 2;
 int cameraType  = 0;
 
 }
@@ -304,12 +304,12 @@ LightBenderIOHandler::_onGuiRender( )
 
   int oldDisplay = displayType;
 
-  ImGui::Combo( "Display", &displayType, " Normals \0 Simple Shading \0\0" );
+  ImGui::Combo( "Display", &displayType, " Normals \0 Simple Shading \0 BSDF \0\0" );
 
   if ( oldDisplay != displayType )
   {
 
-    reinterpret_cast< OptixBoxScene* >( upScene_.get( ) )->setDisplayType( displayType );
+    upScene_->setDisplayType( displayType );
 
   }
 
