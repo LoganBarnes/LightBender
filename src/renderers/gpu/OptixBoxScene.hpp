@@ -36,8 +36,6 @@ public:
   virtual
   ~OptixBoxScene( );
 
-  void setDisplayType( int type );
-
 
 protected:
 
@@ -45,10 +43,6 @@ private:
 
   void _buildGeometry ( );
   void _addLights ( );
-
-  optix::Material sceneMaterial_;
-
-  std::vector< optix::Program > materialPrograms_;
 
 
 

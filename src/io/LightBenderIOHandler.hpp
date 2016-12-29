@@ -26,7 +26,7 @@ class World;
 namespace light
 {
 
-class OptixRenderer;
+class OptixScene;
 
 
 /////////////////////////////////////////////
@@ -78,7 +78,7 @@ private:
   void _setScene( );
 
 
-  std::unique_ptr< OptixRenderer > upRenderer_;
+  std::unique_ptr< OptixScene > upScene_;
 
   int currentScene_;
 

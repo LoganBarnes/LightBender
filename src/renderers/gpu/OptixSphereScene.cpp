@@ -1,6 +1,8 @@
 #include "OptixSphereScene.hpp"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
+#include "optixu/optixu_math_namespace.h"
+#include "commonStructs.h"
 
 
 namespace light
@@ -15,11 +17,12 @@ OptixSphereScene::OptixSphereScene(
                                    int      height,
                                    unsigned vbo
                                    )
-  : OptixRenderer( width, height, vbo )
+  : OptixScene( width, height, vbo )
 
 {
 
-  _buildScene( );
+  _buildGeometry( );
+  _addLights( );
 
   context_->validate( );
   context_->compile( );
@@ -40,48 +43,110 @@ OptixSphereScene::~OptixSphereScene( )
 /// \brief OptixSphereScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixSphereScene::_buildScene( )
+OptixSphereScene::_buildGeometry( )
 {
 
-  std::string box_ptx( light::RES_PATH + "ptx/cudaLightBender_generated_Box.cu.ptx" );
-  optix::Program box_bounds    = context_->createProgramFromPTXFile( box_ptx, "box_bounds" );
-  optix::Program box_intersect = context_->createProgramFromPTXFile( box_ptx, "box_intersect" );
+  // Create primitives used in the scene
+  optix::Geometry quadPrim   = createQuadPrimitive( );
+  optix::Geometry boxPrim    = createBoxPrimitive( );
+  optix::Geometry spherePrim = createSpherePrimitive( );
 
-  // Create box
-  optix::Geometry box = context_->createGeometry( );
-  box->setPrimitiveCount( 1u );
-  box->setBoundingBoxProgram( box_bounds );
-  box->setIntersectionProgram( box_intersect );
-  box[ "boxmin" ]->setFloat( -4.0f, -1.5f, -4.0f );
-  box[ "boxmax" ]->setFloat(  4.0f,  2.0f,  4.0f );
+  // top group everything will get attached to
+  optix::Group topGroup = context_->createGroup( );
+  topGroup->setChildCount( 5 );
 
-  // Materials
-  std::string brdfPtxFile(
-                          light::RES_PATH
-                          + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
-                          );
+  // attach materials to geometries
+  optix::GeometryGroup quadGroup = createGeomGroup(
+                                                   { quadPrim },
+                                                   { sceneMaterial_ },
+                                                   "NoAccel",
+                                                   "NoAccel"
+                                                   );
 
-  optix::Material box_matl = context_->createMaterial( );
-  optix::Program box_ch    = context_->createProgramFromPTXFile(
-                                                                brdfPtxFile,
-                                                                "closest_hit_normals"
-                                                                );
-  box_matl->setClosestHitProgram( 0, box_ch );
+  optix::GeometryGroup boxGroup = createGeomGroup(
+                                                  { boxPrim },
+                                                  { sceneMaterial_ },
+                                                  "NoAccel",
+                                                  "NoAccel"
+                                                  );
+
+  optix::GeometryGroup sphereGroup = createGeomGroup(
+                                                     { spherePrim },
+                                                     { sceneMaterial_ },
+                                                     "NoAccel",
+                                                     "NoAccel"
+                                                     );
 
 
-  // Create GIs for each piece of geometry
-  std::vector< optix::GeometryInstance > gis;
-  gis.push_back( context_->createGeometryInstance( box, &box_matl, &box_matl + 1 ) );
+  // ground quad
+  attachToGroup(
+                topGroup,
+                quadGroup,
+                0,
+                optix::make_float3( 0.0f ),
+                optix::make_float3( 5.0f, 5.0f, 1.0f ),
+                M_PIf * 0.5f,
+                optix::make_float3( 1.0f, 0.0f, 0.0f )
+                );
 
-  // Place all in group
-  optix::GeometryGroup geometrygroup = context_->createGeometryGroup( );
-  geometrygroup->setChildCount( static_cast< unsigned int >( gis.size( ) ) );
-  geometrygroup->setChild( 0, gis[ 0 ] );
-  geometrygroup->setAcceleration( context_->createAcceleration( "NoAccel", "NoAccel" ) );
+  // stack of two boxes
+  attachToGroup( topGroup, boxGroup, 1, optix::make_float3( -2.0f, 1.0f, -1.0f ) );
+  attachToGroup(
+                topGroup, boxGroup, 2,
+                optix::make_float3(    -2.0f, 2.5f, -1.0f ),
+                optix::make_float3( 0.5f )
+                );
 
-  context_[ "top_object" ]->set( geometrygroup );
+  // two spheres
+  attachToGroup( topGroup, sphereGroup, 3, optix::make_float3( 1.5f, 1.0f, 0.0f ) );
+  attachToGroup(
+                topGroup, sphereGroup, 4,
+                optix::make_float3( 2.5f, 0.5f, 1.0f ),
+                optix::make_float3( 0.5f )
+                );
+
+  topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
+
+
+  context_[ "top_object"   ]->set( topGroup );
+  context_[ "top_shadower" ]->set( topGroup );
 
 } // OptixSphereScene::_buildScene
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixSphereScene::_addLights
+///////////////////////////////////////////////////////////////
+void
+OptixSphereScene::_addLights( )
+{
+
+  std::vector< BasicLight > lights = {
+    { optix::make_float3(  10.0f, 30.0f, 20.0f ),
+      optix::make_float3( 500.0f, 500.0f, 500.0f ),
+      1, 0 },
+
+    { optix::make_float3( -10.0f, 20.0f, 15.0f ),
+      optix::make_float3( 300.0f, 300.0f, 300.0f ),
+      1, 0 },
+
+    { optix::make_float3( 0.0f, 2.0f, -35.0f ),
+      optix::make_float3( 100.0f, 100.0f, 100.0f ),
+      1, 0 }
+  };
+
+  optix::Buffer lightBuffer = context_->createBuffer( RT_BUFFER_INPUT );
+
+  lightBuffer->setFormat( RT_FORMAT_USER );
+  lightBuffer->setElementSize( sizeof( lights[ 0 ] ) );
+  lightBuffer->setSize( lights.size( ) );
+  memcpy( lightBuffer->map( ), lights.data( ), lights.size( ) * sizeof( lights[ 0 ] ) );
+  lightBuffer->unmap( );
+
+  context_[ "lights" ]->set( lightBuffer );
+
+} // OptixSphereScene::_addLights
 
 
 

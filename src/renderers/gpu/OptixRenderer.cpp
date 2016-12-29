@@ -25,11 +25,12 @@ OptixRenderer::OptixRenderer(
 {
 
   // context
-  context_->setRayTypeCount( 2 );
+  context_->setRayTypeCount   ( 2 );
   context_->setEntryPointCount( 1 );
-  context_->setStackSize( 100 );
+  context_->setStackSize      ( 4640 );
 
   context_[ "radiance_ray_type" ]->setUint ( 0 );
+  context_[ "shadow_ray_type"   ]->setUint ( 1 );
   context_[ "scene_epsilon"     ]->setFloat( 1.e-2f );
 
   context_[ "eye" ]->setFloat( 0.0f, 0.0f,  0.0f );
@@ -99,8 +100,6 @@ OptixRenderer::~OptixRenderer( )
 
 
 
-
-
 ///////////////////////////////////////////////////////////////
 /// \brief OptixBoxScene::setCameraType
 /// \param type
@@ -110,9 +109,9 @@ OptixRenderer::setCameraType( int type )
 {
 
   std::string cameraPtxFile(
-                             light::RES_PATH
-                             + "ptx/cudaLightBender_generated_Cameras.cu.ptx"
-                             );
+                            light::RES_PATH
+                            + "ptx/cudaLightBender_generated_Cameras.cu.ptx"
+                            );
 
   std::string camera( "pinhole_camera" );
 
@@ -128,8 +127,7 @@ OptixRenderer::setCameraType( int type )
                                                                            camera
                                                                            ) );
 
-}
-
+} // OptixRenderer::setCameraType
 
 
 

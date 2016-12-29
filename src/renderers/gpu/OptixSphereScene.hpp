@@ -2,7 +2,7 @@
 #define OptixSphereScene_hpp
 
 
-#include "OptixRenderer.hpp"
+#include "OptixScene.hpp"
 
 
 namespace light
@@ -14,7 +14,7 @@ namespace light
 ///
 /// \author Logan Barnes
 /////////////////////////////////////////////
-class OptixSphereScene : public OptixRenderer
+class OptixSphereScene : public OptixScene
 {
 
 public:
@@ -40,7 +40,8 @@ protected:
 
 private:
 
-  void _buildScene ( );
+  void _buildGeometry ( );
+  void _addLights ( );
 
 
 

@@ -18,7 +18,35 @@ OptixScene::OptixScene(
                        unsigned vbo
                        )
   : OptixRenderer( width, height, vbo )
-{}
+  , sceneMaterial_( context_->createMaterial( ) )
+{
+
+
+  // Materials
+  std::string brdfPtxFile(
+                          light::RES_PATH
+                          + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
+                          );
+
+  displayPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 "closest_hit_normals"
+                                                                 ) );
+
+  displayPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 "closest_hit_simple_shading"
+                                                                 ) );
+
+  sceneMaterial_->setClosestHitProgram( 0, displayPrograms_.back( ) );
+
+  // for shadowing
+  sceneMaterial_->setAnyHitProgram( 1, context_->createProgramFromPTXFile(
+                                                                          brdfPtxFile,
+                                                                          "any_hit_occlusion"
+                                                                          ) );
+
+}
 
 
 
@@ -30,17 +58,17 @@ OptixScene::~OptixScene( )
 
 
 
-/////////////////////////////////////////////////////////////////
-///// \brief OptixScene::setDisplayType
-///// \param type
-/////////////////////////////////////////////////////////////////
-//void
-//OptixScene::setDisplayType( int type )
-//{
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::setDisplayType
+/// \param type
+///////////////////////////////////////////////////////////////
+void
+OptixScene::setDisplayType( int type )
+{
 
-//  sceneMaterial_->setClosestHitProgram( 0, materialPrograms_[ static_cast< size_t >( type ) ] );
+  sceneMaterial_->setClosestHitProgram( 0, displayPrograms_[ static_cast< size_t >( type ) ] );
 
-//}
+}
 
 
 
@@ -147,6 +175,98 @@ OptixScene::createQuadPrimitive(
   return quad;
 
 } // OptixScene::createQuadPrimitive
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::createGeomGroup
+/// \param geometries
+/// \param materials
+/// \param builderAccel
+/// \param traverserAccel
+/// \return
+///////////////////////////////////////////////////////////////
+optix::GeometryGroup
+OptixScene::createGeomGroup(
+                            const std::vector< optix::Geometry > &geometries,
+                            const std::vector< optix::Material > &materials,
+                            const std::string                    &builderAccel,
+                            const std::string                    &traverserAccel
+                            )
+{
+
+  // check for one to one mapping of geometries and materials
+  if ( materials.size( ) != geometries.size( ) )
+  {
+
+    throw std::runtime_error( "Geometries and Materials must contain the same number of elements" );
+
+  }
+
+  unsigned numInstances = geometries.size( );
+
+  // fill out geometry group for all geometries and materials
+  optix::GeometryGroup geometryGroup = context_->createGeometryGroup( );
+  geometryGroup->setChildCount( numInstances );
+
+  for ( unsigned i = 0; i < numInstances; ++i )
+  {
+
+    optix::GeometryInstance gi = context_->createGeometryInstance( );
+
+    gi->setGeometry( geometries[ i ] );
+    gi->setMaterialCount( 1 );
+    gi->setMaterial( 0, materials[ i ] );
+
+    geometryGroup->setChild( i, gi );
+
+  }
+
+  geometryGroup->setAcceleration( context_->createAcceleration(
+                                                               builderAccel.c_str( ),
+                                                               traverserAccel.c_str( )
+                                                               ) );
+
+  return geometryGroup;
+
+} // OptixScene::createGeomGroup
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::attachToGroup
+/// \param group
+/// \param geomGroup
+/// \param translation
+/// \param scale
+/// \param rotationAngle
+/// \param rotationAxis
+///////////////////////////////////////////////////////////////
+void
+OptixScene::attachToGroup(
+                          optix::Group         group,
+                          optix::GeometryGroup geomGroup,
+                          unsigned             childNum,
+                          optix::float3        translation,
+                          optix::float3        scale,
+                          float                rotationAngle,
+                          optix::float3        rotationAxis
+                          )
+{
+
+  optix::Transform trans = context_->createTransform( );
+  trans->setChild( geomGroup );
+  group->setChild( childNum, trans );
+
+  optix::Matrix4x4 T = optix::Matrix4x4::translate( translation );
+  optix::Matrix4x4 S = optix::Matrix4x4::scale( scale );
+  optix::Matrix4x4 R = optix::Matrix4x4::rotate( rotationAngle, rotationAxis );
+
+  optix::Matrix4x4 M = T * R * S;
+
+  trans->setMatrix( false, M.getData( ), 0 );
+
+}
 
 
 

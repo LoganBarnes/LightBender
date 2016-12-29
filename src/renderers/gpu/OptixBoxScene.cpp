@@ -40,86 +40,55 @@ OptixBoxScene::~OptixBoxScene( )
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::setDisplayType
-/// \param type
-///////////////////////////////////////////////////////////////
-void
-OptixBoxScene::setDisplayType( int type )
-{
-
-  sceneMaterial_->setClosestHitProgram( 0, materialPrograms_[ static_cast< size_t >( type ) ] );
-
-}
-
-
-
-///////////////////////////////////////////////////////////////
 /// \brief OptixBoxScene::_buildGeometry
 ///////////////////////////////////////////////////////////////
 void
 OptixBoxScene::_buildGeometry( )
 {
 
-  // Create box
-  optix::Geometry box = createBoxPrimitive(
-                                           optix::      make_float3( -2.0f, -1.0f,   -1.0f ),
-                                           optix::      make_float3( -4.0f, 1.0f, 1.0f )
-                                           );
+  // Create primitives used in the scene
+  optix::Geometry boxPrim    = createBoxPrimitive( );
+  optix::Geometry spherePrim = createSpherePrimitive( );
+  optix::Geometry quadPrim   = createQuadPrimitive( );
 
-  // Create sphere
-  optix::Geometry sphere = createSpherePrimitive(
-                                                 optix::make_float3( 3.0f, 0.0f, 0.0f ),
-                                                 1.0f
-                                                 );
+  // top group everything will get attached to
+  optix::Group topGroup = context_->createGroup( );
+  topGroup->setChildCount( 3 );
 
-  // Create quad
-  optix::Geometry quad = createQuadPrimitive(
-                                             optix::make_float3( -1, -1, 0 ),
-                                             optix::make_float3(  2, 0,  0 ),
-                                             optix::make_float3(  0, 2,  0 )
-                                             );
+  // attach materials to geometries
+  optix::GeometryGroup boxGroup = createGeomGroup(
+                                                  { boxPrim },
+                                                  { sceneMaterial_ },
+                                                  "NoAccel",
+                                                  "NoAccel"
+                                                  );
 
-  // Materials
-  std::string brdfPtxFile(
-                          light::RES_PATH
-                          + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
-                          );
+  optix::GeometryGroup quadGroup = createGeomGroup(
+                                                   { quadPrim },
+                                                   { sceneMaterial_ },
+                                                   "NoAccel",
+                                                   "NoAccel"
+                                                   );
 
-  sceneMaterial_ = context_->createMaterial( );
-
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "closest_hit_normals"
-                                                                  ) );
-
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "closest_hit_simple_shading"
-                                                                  ) );
-
-  sceneMaterial_->setClosestHitProgram( 0, materialPrograms_.back( ) );
+  optix::GeometryGroup sphereGroup = createGeomGroup(
+                                                     { spherePrim },
+                                                     { sceneMaterial_ },
+                                                     "NoAccel",
+                                                     "NoAccel"
+                                                     );
 
 
-  // Create GIs for each piece of geometry
-  std::vector< optix::GeometryInstance > gis;
-  gis.push_back( context_->createGeometryInstance( box,    &sceneMaterial_, &sceneMaterial_ + 1 ) );
-  gis.push_back( context_->createGeometryInstance( quad,   &sceneMaterial_, &sceneMaterial_ + 1 ) );
-  gis.push_back( context_->createGeometryInstance( sphere, &sceneMaterial_, &sceneMaterial_ + 1 ) );
+  attachToGroup( topGroup, boxGroup, 0, optix::make_float3( -3.0f, 0.0f, 0.0f ) );
 
-  // Place all in group
-  optix::GeometryGroup geometrygroup = context_->createGeometryGroup( );
-  geometrygroup->setChildCount( static_cast< unsigned int >( gis.size( ) ) );
+  topGroup->setChild( 1, quadGroup );
 
-  for ( unsigned i = 0; i < gis.size( ); ++i )
-  {
+  attachToGroup( topGroup, sphereGroup, 2, optix::make_float3( 3.0f, 0.0f, 0.0f ) );
 
-    geometrygroup->setChild( i, gis[ i ] );
+  topGroup->setAcceleration( context_->createAcceleration( "NoAccel", "NoAccel" ) );
 
-  }
 
-  geometrygroup->setAcceleration( context_->createAcceleration( "NoAccel", "NoAccel" ) );
-
-  context_[ "top_object" ]->set( geometrygroup );
+  context_[ "top_object"   ]->set( topGroup );
+  context_[ "top_shadower" ]->set( topGroup );
 
 } // OptixBoxScene::_buildGeometry
 

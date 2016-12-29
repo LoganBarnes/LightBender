@@ -169,13 +169,13 @@ LightBenderIOHandler::_onRender( const double )
 
   upGLWrapper_->useProgram  ( "fullscreenProgram" );
 
-  if ( upRenderer_ )
+  if ( upScene_ )
   {
 
-    upRenderer_->renderWorld( *upCamera_ );
+    upScene_->renderWorld( *upCamera_ );
 
 
-    optix::Buffer buffer = upRenderer_->getBuffer( );
+    optix::Buffer buffer = upScene_->getBuffer( );
 
     RTsize elementSize = buffer->getElementSize( );
 
@@ -241,7 +241,9 @@ LightBenderIOHandler::_onGuiRender( )
 
   bool alwaysTrue = true;
 
-  ImGui::SetNextWindowSize( ImVec2( 345, defaultHeight * 1.0f ), /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
+  ImGui::SetNextWindowSize( ImVec2( 345,
+                                   defaultHeight * 1.0f ),
+                           /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
   ImGui::SetNextWindowPos ( ImVec2( 0, 0 ), ImGuiSetCond_FirstUseEver );
 
   ImGui::Begin( "Light Bender Settings", &alwaysTrue );
@@ -283,13 +285,13 @@ LightBenderIOHandler::_onGuiRender( )
     if ( oldCamera != cameraType )
     {
 
-      upRenderer_->setCameraType( cameraType );
+      upScene_->setCameraType( cameraType );
 
     }
 
-    glm::vec3 eye ( upCamera_->getEye( )  );
+    glm::vec3 eye ( upCamera_->getEye( ) );
     glm::vec3 look( upCamera_->getLook( ) );
-    ImGui::Text( "EYE:  %2.2f, %2.2f, %2.2f",    eye.x,  eye.y,  eye.z  );
+    ImGui::Text( "EYE:  %2.2f, %2.2f, %2.2f",    eye.x,  eye.y,   eye.z  );
     ImGui::Text( "LOOK:  %1.2f,  %1.2f,  %1.2f", look.x, look.y, look.z );
 
   }
@@ -297,24 +299,17 @@ LightBenderIOHandler::_onGuiRender( )
   //
   // Box Scene
   //
-  if ( currentScene_ == 0 )
+  ImGui::Separator( );
+  ImGui::Text( "Display" );
+
+  int oldDisplay = displayType;
+
+  ImGui::Combo( "Display", &displayType, " Normals \0 Simple Shading \0\0" );
+
+  if ( oldDisplay != displayType )
   {
 
-    if ( ImGui::CollapsingHeader( "Box Scene", "box", false, true ) )
-    {
-
-      int oldDisplay = displayType;
-
-      ImGui::Combo( "Display", &displayType, " Normals \0 Simple Shading \0\0" );
-
-      if ( oldDisplay != displayType )
-      {
-
-        reinterpret_cast< OptixBoxScene* >( upRenderer_.get() )->setDisplayType( displayType );
-
-      }
-
-    }
+    reinterpret_cast< OptixBoxScene* >( upScene_.get( ) )->setDisplayType( displayType );
 
   }
 
@@ -328,7 +323,7 @@ LightBenderIOHandler::_onGuiRender( )
     ImGui::Text(
                 "Camera Movement:\n\n"
                 "    Left Mouse      -    Rotate\n" \
-                "    Right Mouse     -    Zoom\n" \
+                "    Right Mouse     -    Zoom\n"   \
                 "    Middle Scroll   -    Zoom\n"
                 );
 
@@ -347,10 +342,10 @@ void
 LightBenderIOHandler::_setScene( )
 {
 
-  if ( upRenderer_ )
+  if ( upScene_ )
   {
 
-    upRenderer_.reset( );
+    upScene_.reset( );
 
   }
 
@@ -359,27 +354,24 @@ LightBenderIOHandler::_setScene( )
 
   case 0:
 
-    upRenderer_
-      = std::unique_ptr< OptixRenderer >( new OptixBoxScene(
-                                                            defaultWidth,
-                                                            defaultHeight,
-                                                            upGLWrapper_->getBuffer( "renderBuffer" )
-                                                            ) );
-
-    reinterpret_cast< OptixBoxScene* >( upRenderer_.get() )->setDisplayType( displayType );
+    upScene_
+      = std::unique_ptr< OptixScene >( new OptixBoxScene(
+                                                         defaultWidth,
+                                                         defaultHeight,
+                                                         upGLWrapper_->getBuffer( "renderBuffer" )
+                                                         ) );
 
     break;
 
 
   case 1:
 
-    upRenderer_
-      = std::unique_ptr< OptixRenderer >( new OptixSphereScene(
-                                                               defaultWidth,
-                                                               defaultHeight,
-                                                               upGLWrapper_->getBuffer(
-                                                                                       "renderBuffer" )
-                                                               ) );
+    upScene_
+      = std::unique_ptr< OptixScene >( new OptixSphereScene(
+                                                            defaultWidth,
+                                                            defaultHeight,
+                                                            upGLWrapper_->getBuffer( "renderBuffer" )
+                                                            ) );
     break;
 
 
@@ -391,7 +383,8 @@ LightBenderIOHandler::_setScene( )
 
   } // switch
 
-  upRenderer_->setCameraType( cameraType );
+  upScene_->setDisplayType( displayType );
+  upScene_->setCameraType ( cameraType );
 
 } // LightBenderIOHandler::_setScene
 
