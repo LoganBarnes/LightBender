@@ -33,6 +33,8 @@ constexpr int defaultHeight = 720;
 int displayType = 2;
 int cameraType  = 0;
 
+bool pathTrace = false;
+
 }
 
 
@@ -127,6 +129,8 @@ LightBenderIOHandler::rotateCamera(
 
   upCamera_->updateOrbit( 0.f, static_cast< float >( deltaX ), static_cast< float >( deltaY ) );
 
+  upScene_->resetFrameCount();
+
 }
 
 
@@ -136,6 +140,8 @@ LightBenderIOHandler::zoomCamera( double deltaZ )
 {
 
   upCamera_->updateOrbit( static_cast< float >( deltaZ * 0.25 ), 0.f, 0.f );
+
+  upScene_->resetFrameCount();
 
 }
 
@@ -150,6 +156,8 @@ LightBenderIOHandler::resize(
 
   upGLWrapper_->setViewportSize( w, h );
   upCamera_->setAspectRatio( w * 1.0f / h );
+
+  upScene_->resetFrameCount();
 
 }
 
@@ -241,9 +249,7 @@ LightBenderIOHandler::_onGuiRender( )
 
   bool alwaysTrue = true;
 
-  ImGui::SetNextWindowSize( ImVec2( 345,
-                                   defaultHeight * 1.0f ),
-                           /*alwaysTrue*/ ImGuiSetCond_FirstUseEver );
+  ImGui::SetNextWindowSize( ImVec2( 345, defaultHeight * 1.0f ), ImGuiSetCond_FirstUseEver );
   ImGui::SetNextWindowPos ( ImVec2( 0, 0 ), ImGuiSetCond_FirstUseEver );
 
   ImGui::Begin( "Light Bender Settings", &alwaysTrue );
@@ -275,6 +281,20 @@ LightBenderIOHandler::_onGuiRender( )
 
     }
 
+    bool oldPathTrace = pathTrace;
+    ImGui::Checkbox( "Pathtrace", &pathTrace );
+
+    if ( oldPathTrace != pathTrace )
+    {
+
+      upScene_->setPathTracing( pathTrace );
+      upScene_->setCameraType ( cameraType );
+
+    }
+
+    //
+    // camera stuff
+    //
     ImGui::Separator( );
     ImGui::Text( "Camera" );
 
@@ -384,6 +404,7 @@ LightBenderIOHandler::_setScene( )
   } // switch
 
   upScene_->setDisplayType( displayType );
+  upScene_->setPathTracing( pathTrace );
   upScene_->setCameraType ( cameraType );
 
 } // LightBenderIOHandler::_setScene

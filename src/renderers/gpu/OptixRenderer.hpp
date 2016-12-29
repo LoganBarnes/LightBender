@@ -38,7 +38,8 @@ public:
   ~OptixRenderer( );
 
 
-  void setCameraType( int type );
+  void setCameraType  ( int type );
+  void setPathTracing ( int pathTracing );
 
 
   virtual
@@ -51,7 +52,9 @@ public:
   void renderWorld ( const graphics::Camera &camera ) final;
 
 
-  optix::Buffer getBuffer( );
+  optix::Buffer getBuffer ( );
+
+  void resetFrameCount ( );
 
 
   glm::vec3 background_color;
@@ -65,15 +68,16 @@ protected:
 
 private:
 
-
 //  bool   m_camera_changed;
 //  bool   m_use_pbo_buffer;
 //  int    m_num_devices;
 //  bool   m_cpu_rendering_enabled;
 
+  bool pathTracing_;
+  unsigned frame_;
 
-  unsigned int width_;
-  unsigned int height_;
+  unsigned width_;
+  unsigned height_;
 
 
 

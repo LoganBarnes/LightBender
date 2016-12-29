@@ -5,6 +5,7 @@ rtDeclareVariable( PerRayData_radiance, prd_radiance,      rtPayload, );
 
 rtDeclareVariable( optix::Ray,          ray,               rtCurrentRay, );
 rtDeclareVariable( uint2,               launch_index,      rtLaunchIndex, );
+rtDeclareVariable( unsigned int,        frame_number,      , );
 
 rtDeclareVariable( unsigned int,        radiance_ray_type, , );
 rtDeclareVariable( float,               scene_epsilon,     , );
@@ -56,6 +57,54 @@ pinhole_camera( )
 
 
 /////////////////////////////////////////////////////////
+/// \brief pinhole_camera
+/////////////////////////////////////////////////////////
+RT_PROGRAM
+void
+pathtrace_pinhole_camera( )
+{
+
+  size_t2 screenSize = output_buffer.size( );
+
+  float2 d             = make_float2( launch_index ) / make_float2( screenSize ) * 2.f - 1.f;
+  float3 ray_origin    = eye;
+  float3 ray_direction = normalize( d.x * U + d.y * V + W );
+
+  optix::Ray ray(
+                 ray_origin,
+                 ray_direction,
+                 radiance_ray_type,
+                 scene_epsilon
+                 );
+
+  PerRayData_radiance prd;
+  prd.importance = 1.0f;
+  prd.depth      = 0;
+
+  rtTrace( top_object, ray, prd );
+
+  float4 radiance = make_float4( prd.result, 1.0 );
+
+  if ( frame_number > 1 )
+  {
+
+    float a = 1.0f / static_cast< float >( frame_number );
+    float b = ( static_cast< float >( frame_number ) - 1.0f ) * a;
+    output_buffer[ launch_index ] = a * radiance + b * output_buffer[ launch_index ];
+
+  }
+  else
+  {
+
+    output_buffer[ launch_index ] = radiance;
+
+  }
+
+} // pinhole_camera
+
+
+
+/////////////////////////////////////////////////////////
 /// \brief orthographic_camera
 /////////////////////////////////////////////////////////
 RT_PROGRAM
@@ -84,6 +133,56 @@ orthographic_camera( )
   rtTrace( top_object, ray, prd );
 
   output_buffer[ launch_index ] = make_float4( prd.result, 1.0 );
+
+} // orthographic_camera
+
+
+
+
+/////////////////////////////////////////////////////////
+/// \brief pathtrace_orthographic_camera
+/////////////////////////////////////////////////////////
+RT_PROGRAM
+void
+pathtrace_orthographic_camera( )
+{
+
+  size_t2 screen = output_buffer.size( );
+
+  float2 d             = make_float2( launch_index ) / make_float2( screen ) * 2.f - 1.f; // film coords
+  float3 ray_origin    = eye + d.x * U + d.y * V;                          // eye + offset in film space
+  float3 ray_direction = normalize( W );                                   // always parallel view direction
+
+  optix::Ray ray = optix::make_Ray(
+                                   ray_origin,
+                                   ray_direction,
+                                   radiance_ray_type,
+                                   scene_epsilon,
+                                   RT_DEFAULT_MAX
+                                   );
+
+  PerRayData_radiance prd;
+  prd.importance = 1.f;
+  prd.depth      = 0;
+
+  rtTrace( top_object, ray, prd );
+
+  float4 radiance = make_float4( prd.result, 1.0 );
+
+  if ( frame_number > 1 )
+  {
+
+    float a = 1.0f / static_cast< float >( frame_number );
+    float b = ( static_cast< float >( frame_number ) - 1.0f ) * a;
+    output_buffer[ launch_index ] = a * radiance + b * output_buffer[ launch_index ];
+
+  }
+  else
+  {
+
+    output_buffer[ launch_index ] = radiance;
+
+  }
 
 } // orthographic_camera
 

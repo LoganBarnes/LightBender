@@ -73,6 +73,8 @@ OptixScene::setDisplayType( int type )
 
   sceneMaterial_->setClosestHitProgram( 0, displayPrograms_[ static_cast< size_t >( type ) ] );
 
+  resetFrameCount( );
+
 }
 
 
@@ -208,7 +210,7 @@ OptixScene::createGeomGroup(
 
   }
 
-  unsigned numInstances = geometries.size( );
+  size_t numInstances = geometries.size( );
 
   // fill out geometry group for all geometries and materials
   optix::GeometryGroup geometryGroup = context_->createGeometryGroup( );

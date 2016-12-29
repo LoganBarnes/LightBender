@@ -21,7 +21,8 @@ OptixRenderer::OptixRenderer(
   , background_color ( 0.0f, 0.0f, 0.0f )
   , error_color      ( 1.0f, 0.0f, 0.0f )
   , context_         ( optix::Context::create( ) )
-
+  , pathTracing_     ( false )
+  , frame_           ( 1u )
 {
 
   // context
@@ -32,6 +33,7 @@ OptixRenderer::OptixRenderer(
   context_[ "radiance_ray_type" ]->setUint ( 0 );
   context_[ "shadow_ray_type"   ]->setUint ( 1 );
   context_[ "scene_epsilon"     ]->setFloat( 1.e-2f );
+  context_[ "frame_number"      ]->setUint ( frame_ );
 
   context_[ "eye" ]->setFloat( 0.0f, 0.0f,  0.0f );
   context_[ "U"   ]->setFloat( 1.0f, 0.0f,  0.0f );
@@ -122,12 +124,35 @@ OptixRenderer::setCameraType( int type )
 
   }
 
+  if ( pathTracing_ )
+  {
+
+    camera = "pathtrace_" + camera;
+
+  }
+
   context_->setRayGenerationProgram( 0, context_->createProgramFromPTXFile(
                                                                            cameraPtxFile,
                                                                            camera
                                                                            ) );
 
+  resetFrameCount( );
+
 } // OptixRenderer::setCameraType
+
+
+
+///
+/// \brief OptixRenderer::setPathTracing
+/// \param pathTracing
+///
+void
+OptixRenderer::setPathTracing( int pathTracing )
+{
+
+  pathTracing_ = pathTracing;
+
+}
 
 
 
@@ -145,6 +170,8 @@ OptixRenderer::resize(
 
   width_  = static_cast< unsigned >( w );
   height_ = static_cast< unsigned >( h );
+
+  resetFrameCount( );
 
 }
 
@@ -167,6 +194,8 @@ OptixRenderer::renderWorld( const graphics::Camera &camera )
   context_[ "V"   ]->setFloat(   V.x,   V.y,   V.z );
   context_[ "W"   ]->setFloat(   W.x,   W.y,   W.z );
 
+  context_[ "frame_number" ]->setUint ( frame_ );
+
   optix::Buffer buffer = context_[ "output_buffer" ]->getBuffer( );
   RTsize buffer_width, buffer_height;
   buffer->getSize( buffer_width, buffer_height );
@@ -176,6 +205,8 @@ OptixRenderer::renderWorld( const graphics::Camera &camera )
                    static_cast< unsigned >( buffer_width  ),
                    static_cast< unsigned >( buffer_height )
                    );
+
+  ++frame_;
 
 } // OptixRenderer::RenderWorld
 
@@ -190,6 +221,19 @@ OptixRenderer::getBuffer( )
 {
 
   return context_[ "output_buffer" ]->getBuffer( );
+
+}
+
+
+
+///
+/// \brief OptixRenderer::resetFrameCount
+///
+void
+OptixRenderer::resetFrameCount( )
+{
+
+  frame_ = 1;
 
 }
 
