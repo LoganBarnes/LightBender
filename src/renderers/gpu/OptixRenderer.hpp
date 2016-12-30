@@ -40,7 +40,7 @@ public:
 
   void setCameraType  ( int type );
   void setSqrtSamples ( unsigned sqrtSamples );
-  void setPathTracing ( int pathTracing );
+  void setPathTracing ( bool pathTracing );
 
 
   virtual

@@ -210,7 +210,7 @@ OptixScene::createGeomGroup(
 
   }
 
-  size_t numInstances = geometries.size( );
+  unsigned numInstances = static_cast< unsigned >( geometries.size( ) );
 
   // fill out geometry group for all geometries and materials
   optix::GeometryGroup geometryGroup = context_->createGeometryGroup( );

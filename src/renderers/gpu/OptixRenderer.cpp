@@ -160,7 +160,7 @@ OptixRenderer::setSqrtSamples( unsigned sqrtSamples )
 /// \param pathTracing
 ///
 void
-OptixRenderer::setPathTracing( int pathTracing )
+OptixRenderer::setPathTracing( bool pathTracing )
 {
 
   pathTracing_ = pathTracing;
