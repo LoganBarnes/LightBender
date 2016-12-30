@@ -206,7 +206,7 @@ protected:
     optix::float2 inv_screen  = 1.0f / optix::make_float2( screen ) * 2.0f;
     optix::float2 pixelCorner = optix::make_float2( launch_index ) * inv_screen - 1.0f;
 
-    optix::float2 jitter_scale     = inv_screen / sqrt_num_samples;
+    optix::float2 jitter_scale     = inv_screen / static_cast< float >( sqrt_num_samples );
     unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
 
     std::vector< optix::float2 > samples( samples_per_pixel );
@@ -231,7 +231,10 @@ protected:
       x = samples_per_pixel % sqrt_num_samples;
       y = samples_per_pixel / sqrt_num_samples;
 
-      jitter = optix::make_float2( x, y );
+      jitter = optix::make_float2(
+                                  static_cast< float >( x ),
+                                  static_cast< float >( y )
+                                  );
 
       if ( staticSamples )
       {
