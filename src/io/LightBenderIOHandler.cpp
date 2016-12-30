@@ -16,8 +16,8 @@
 // project
 #include "LightBenderCallback.hpp"
 #include "LightBenderConfig.hpp"
-#include "OptixBoxScene.hpp"
-#include "OptixSphereScene.hpp"
+#include "OptixBasicScene.hpp"
+#include "OptixAdvancedScene.hpp"
 
 
 namespace light
@@ -31,9 +31,11 @@ constexpr int defaultWidth  = 1280;
 constexpr int defaultHeight = 720;
 
 int displayType = 2;
-int cameraType  = 0;
 
 bool pathTrace = false;
+
+int cameraType  = 0;
+int sqrtSamples = 1;
 
 }
 
@@ -129,7 +131,7 @@ LightBenderIOHandler::rotateCamera(
 
   upCamera_->updateOrbit( 0.f, static_cast< float >( deltaX ), static_cast< float >( deltaY ) );
 
-  upScene_->resetFrameCount();
+  upScene_->resetFrameCount( );
 
 }
 
@@ -141,7 +143,7 @@ LightBenderIOHandler::zoomCamera( double deltaZ )
 
   upCamera_->updateOrbit( static_cast< float >( deltaZ * 0.25 ), 0.f, 0.f );
 
-  upScene_->resetFrameCount();
+  upScene_->resetFrameCount( );
 
 }
 
@@ -157,7 +159,7 @@ LightBenderIOHandler::resize(
   upGLWrapper_->setViewportSize( w, h );
   upCamera_->setAspectRatio( w * 1.0f / h );
 
-  upScene_->resetFrameCount();
+  upScene_->resetFrameCount( );
 
 }
 
@@ -272,7 +274,7 @@ LightBenderIOHandler::_onGuiRender( )
 
     int oldScene = currentScene_;
 
-    ImGui::Combo( "", &currentScene_, " Box \0 Other Box \0\0" );
+    ImGui::Combo( "", &currentScene_, " Basic \0 Advanced \0\0" );
 
     if ( oldScene != currentScene_ )
     {
@@ -299,15 +301,23 @@ LightBenderIOHandler::_onGuiRender( )
     ImGui::Text( "Camera" );
 
     int oldCamera = cameraType;
-
     ImGui::Combo( " ", &cameraType, " Perspective \0 Orthographic \0\0" );
 
     if ( oldCamera != cameraType )
     {
-
       upScene_->setCameraType( cameraType );
-
     }
+
+
+    int oldSamples = sqrtSamples;
+    ImGui::SliderInt( "Samples (sqrt)", &sqrtSamples, 1, 10 );
+
+    if ( oldSamples != sqrtSamples  )
+    {
+      upScene_->setSqrtSamples( static_cast< unsigned >( sqrtSamples ) );
+    }
+
+    ImGui::Separator( );
 
     glm::vec3 eye ( upCamera_->getEye( ) );
     glm::vec3 look( upCamera_->getLook( ) );
@@ -375,11 +385,11 @@ LightBenderIOHandler::_setScene( )
   case 0:
 
     upScene_
-      = std::unique_ptr< OptixScene >( new OptixBoxScene(
-                                                         defaultWidth,
-                                                         defaultHeight,
-                                                         upGLWrapper_->getBuffer( "renderBuffer" )
-                                                         ) );
+      = std::unique_ptr< OptixScene >( new OptixBasicScene(
+                                                           defaultWidth,
+                                                           defaultHeight,
+                                                           upGLWrapper_->getBuffer( "renderBuffer" )
+                                                           ) );
 
     break;
 
@@ -387,11 +397,12 @@ LightBenderIOHandler::_setScene( )
   case 1:
 
     upScene_
-      = std::unique_ptr< OptixScene >( new OptixSphereScene(
-                                                            defaultWidth,
-                                                            defaultHeight,
-                                                            upGLWrapper_->getBuffer( "renderBuffer" )
-                                                            ) );
+      = std::unique_ptr< OptixScene >( new OptixAdvancedScene(
+                                                              defaultWidth,
+                                                              defaultHeight,
+                                                              upGLWrapper_->getBuffer(
+                                                                                      "renderBuffer" )
+                                                              ) );
     break;
 
 

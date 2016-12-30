@@ -1,4 +1,4 @@
-#include "OptixSphereScene.hpp"
+#include "OptixAdvancedScene.hpp"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
 #include "optixu/optixu_math_namespace.h"
@@ -10,13 +10,13 @@ namespace light
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixSphereScene::OptixSphereScene
+/// \brief OptixAdvancedScene::OptixAdvancedScene
 ///////////////////////////////////////////////////////////////
-OptixSphereScene::OptixSphereScene(
-                                   int      width,
-                                   int      height,
-                                   unsigned vbo
-                                   )
+OptixAdvancedScene::OptixAdvancedScene(
+                                       int      width,
+                                       int      height,
+                                       unsigned vbo
+                                       )
   : OptixScene( width, height, vbo )
 
 {
@@ -32,18 +32,18 @@ OptixSphereScene::OptixSphereScene(
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixSphereScene::~OptixSphereScene
+/// \brief OptixAdvancedScene::~OptixAdvancedScene
 ///////////////////////////////////////////////////////////////
-OptixSphereScene::~OptixSphereScene( )
+OptixAdvancedScene::~OptixAdvancedScene( )
 {}
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixSphereScene::_buildScene
+/// \brief OptixAdvancedScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixSphereScene::_buildGeometry( )
+OptixAdvancedScene::_buildGeometry( )
 {
 
   // Create primitives used in the scene
@@ -107,18 +107,17 @@ OptixSphereScene::_buildGeometry( )
 
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
-  context_[ "top_object"   ]->set( topGroup );
-  context_[ "top_shadower" ]->set( topGroup );
+  context_[ "top_object" ]->set( topGroup );
 
-} // OptixSphereScene::_buildScene
+} // OptixAdvancedScene::_buildScene
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixSphereScene::_addLights
+/// \brief OptixAdvancedScene::_addLights
 ///////////////////////////////////////////////////////////////
 void
-OptixSphereScene::_addLights( )
+OptixAdvancedScene::_addLights( )
 {
 
   std::vector< BasicLight > lights = {
@@ -145,7 +144,7 @@ OptixSphereScene::_addLights( )
 
   context_[ "lights" ]->set( lightBuffer );
 
-} // OptixSphereScene::_addLights
+} // OptixAdvancedScene::_addLights
 
 
 

@@ -1,4 +1,4 @@
-#include "OptixBoxScene.hpp"
+#include "OptixBasicScene.hpp"
 #include <optixu/optixu_math_stream_namespace.h>
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
@@ -10,13 +10,13 @@ namespace light
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::OptixBoxScene
+/// \brief OptixBasicScene::OptixBasicScene
 ///////////////////////////////////////////////////////////////
-OptixBoxScene::OptixBoxScene(
-                             int      width,
-                             int      height,
-                             unsigned vbo
-                             )
+OptixBasicScene::OptixBasicScene(
+                                 int      width,
+                                 int      height,
+                                 unsigned vbo
+                                 )
   : OptixScene( width, height, vbo )
 
 {
@@ -32,18 +32,18 @@ OptixBoxScene::OptixBoxScene(
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::~OptixBoxScene
+/// \brief OptixBasicScene::~OptixBasicScene
 ///////////////////////////////////////////////////////////////
-OptixBoxScene::~OptixBoxScene( )
+OptixBasicScene::~OptixBasicScene( )
 {}
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::_buildGeometry
+/// \brief OptixBasicScene::_buildGeometry
 ///////////////////////////////////////////////////////////////
 void
-OptixBoxScene::_buildGeometry( )
+OptixBasicScene::_buildGeometry( )
 {
 
   // Create primitives used in the scene
@@ -86,19 +86,17 @@ OptixBoxScene::_buildGeometry( )
 
   topGroup->setAcceleration( context_->createAcceleration( "NoAccel", "NoAccel" ) );
 
+  context_[ "top_object" ]->set( topGroup );
 
-  context_[ "top_object"   ]->set( topGroup );
-  context_[ "top_shadower" ]->set( topGroup );
-
-} // OptixBoxScene::_buildGeometry
+} // OptixBasicScene::_buildGeometry
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixBoxScene::_addLights
+/// \brief OptixBasicScene::_addLights
 ///////////////////////////////////////////////////////////////
 void
-OptixBoxScene::_addLights( )
+OptixBasicScene::_addLights( )
 {
 
   std::vector< BasicLight > lights = {
@@ -107,7 +105,7 @@ OptixBoxScene::_addLights( )
       1, 0 },
 
     { optix::make_float3( -10.0f, 20.0f, 15.0f ),
-      optix::make_float3( 900.0f),
+      optix::make_float3( 900.0f ),
       1, 0 },
 
     { optix::make_float3( 0.0f, -10.0f, -25.0f ),
@@ -125,7 +123,7 @@ OptixBoxScene::_addLights( )
 
   context_[ "lights" ]->set( lightBuffer );
 
-} // OptixBoxScene::_addLights
+} // OptixBasicScene::_addLights
 
 
 

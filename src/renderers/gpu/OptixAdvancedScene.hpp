@@ -1,5 +1,5 @@
-#ifndef OptixSphereScene_hpp
-#define OptixSphereScene_hpp
+#ifndef OptixAdvancedScene_hpp
+#define OptixAdvancedScene_hpp
 
 
 #include "OptixScene.hpp"
@@ -10,30 +10,30 @@ namespace light
 
 
 /////////////////////////////////////////////
-/// \brief The OptixSphereScene class
+/// \brief The OptixAdvancedScene class
 ///
 /// \author Logan Barnes
 /////////////////////////////////////////////
-class OptixSphereScene : public OptixScene
+class OptixAdvancedScene : public OptixScene
 {
 
 public:
 
   ///////////////////////////////////////////////////////////////
-  /// \brief OptixSphereScene
+  /// \brief OptixAdvancedScene
   ///////////////////////////////////////////////////////////////
-  OptixSphereScene(
-                   int      width,
-                   int      height,
-                   unsigned vbo
-                   );
+  OptixAdvancedScene(
+                     int      width,
+                     int      height,
+                     unsigned vbo
+                     );
 
 
   ///////////////////////////////////////////////////////////////
-  /// \brief ~OptixSphereScene
+  /// \brief ~OptixAdvancedScene
   ///////////////////////////////////////////////////////////////
   virtual
-  ~OptixSphereScene( );
+  ~OptixAdvancedScene( );
 
 
 protected:
@@ -51,4 +51,4 @@ private:
 } // namespace light
 
 
-#endif // OptixSphereScene_hpp
+#endif // OptixAdvancedScene_hpp

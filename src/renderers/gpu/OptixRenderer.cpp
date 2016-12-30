@@ -85,6 +85,9 @@ OptixRenderer::OptixRenderer(
 
   context_[ "output_buffer" ]->set( buffer );
 
+  setSqrtSamples( 1 );
+  setCameraType ( 0 );
+
 }
 
 
@@ -139,6 +142,16 @@ OptixRenderer::setCameraType( int type )
   resetFrameCount( );
 
 } // OptixRenderer::setCameraType
+
+
+
+void
+OptixRenderer::setSqrtSamples( unsigned sqrtSamples )
+{
+
+  context_[ "sqrt_num_samples" ]->setUint( sqrtSamples );
+
+}
 
 
 

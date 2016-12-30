@@ -15,7 +15,7 @@ rtDeclareVariable( float,               t_hit,            rtIntersectionDistance
 
 rtDeclareVariable( unsigned int,        shadow_ray_type,  , );
 rtDeclareVariable( float,               scene_epsilon,    , );
-rtDeclareVariable( rtObject,            top_shadower,     , );
+rtDeclareVariable( rtObject,            top_object,       , );
 
 rtBuffer< BasicLight > lights;
 
@@ -87,7 +87,7 @@ closest_hit_simple_shading( )
                             );
 
       // shoot ray into scene
-      rtTrace( top_shadower, shadow_ray, shadow_prd );
+      rtTrace( top_object, shadow_ray, shadow_prd );
 
 
       radiance += ( 1.0 / M_PIf )                        // lambertian pi normalization
@@ -161,7 +161,7 @@ closest_hit_bsdf( )
                             );
 
       // shoot ray into scene
-      rtTrace( top_shadower, shadow_ray, shadow_prd );
+      rtTrace( top_object, shadow_ray, shadow_prd );
 
 
       // only missing bsdf calculation right now
@@ -185,9 +185,9 @@ closest_hit_bsdf( )
         float t = s <= 0.0f ? 1.0f : max( nDotL, nDotV );
 
         float3 A = ( 1.0
-                   - 0.5  * ( gammaPow2 / ( gammaPow2 + 0.33 ) )
-                   + 0.17 * ( gammaPow2 / ( gammaPow2 + 0.13 ) ) * albedo
-                   ) / M_PIf;
+                    - 0.5  * ( gammaPow2 / ( gammaPow2 + 0.33 ) )
+                    + 0.17 * ( gammaPow2 / ( gammaPow2 + 0.13 ) ) * albedo
+                    ) / M_PIf;
 
         float B = 0.45f * ( gammaPow2 / ( gammaPow2 + 0.09f ) ) / M_PIf;
 

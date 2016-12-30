@@ -35,6 +35,7 @@ run/_build
 run/bin
 run/include
 run/lib
+run/testbin
 *.ini
 run/output/*
 

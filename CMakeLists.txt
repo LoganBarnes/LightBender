@@ -5,7 +5,7 @@ project ( LightBender )
 option( BUILD_TESTS OFF "Build unit tests created with gmock/gtest framework" )
 
 if ( MSVC )
-  add_definitions( -DNOMINMAX )
+  add_definitions( -DNOMINMAX ) # for OptiX
 endif( )
 
 # namespace used for project
@@ -111,12 +111,6 @@ set(
     )
 
 
-#set(
-#    CUDA_COMPUTE_FLAGS
-#    "-gencode arch=compute_30,code=sm_30"
-##    " -gencode arch=compute_35,code=sm_35"
-#    )
-
 set( USE_CUDA ON )
 
 
@@ -129,6 +123,7 @@ set(
     ${SRC_DIR}/io
     ${SRC_DIR}/renderers
     ${SRC_DIR}/renderers/gpu
+    ${SRC_DIR}/renderers/gpu/cuda
     )
 
 # cpp files
@@ -145,8 +140,8 @@ set(
 
     ${SRC_DIR}/renderers/gpu/OptixRenderer.cpp
     ${SRC_DIR}/renderers/gpu/OptixScene.cpp
-    ${SRC_DIR}/renderers/gpu/OptixBoxScene.cpp
-    ${SRC_DIR}/renderers/gpu/OptixSphereScene.cpp
+    ${SRC_DIR}/renderers/gpu/OptixBasicScene.cpp
+    ${SRC_DIR}/renderers/gpu/OptixAdvancedScene.cpp
 
     ${SRC_DIR}/io/LightBenderIOHandler.cpp
     ${SRC_DIR}/io/LightBenderCallback.cpp
@@ -155,7 +150,7 @@ set(
 
 set(
     TESTING_SOURCE
-    ${SRC_DIR}/testing/ExampleUnitTests.cpp
+    ${SRC_DIR}/testing/PathMathUnitTests.cpp
     )
 
 set(
@@ -171,6 +166,7 @@ set(
 set(
     TESTING_SYSTEM_INCLUDE_DIRS
     ${GMOCK_INCLUDE_DIRS}
+    ${SRC_DIR}/renderers/gpu/cuda
     )
 
 set(
