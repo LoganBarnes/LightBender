@@ -25,4 +25,9 @@ if [[ -d include ]];
   rm -rf include
 fi;
 
+if [[ -d testbin ]];
+  then
+  rm -rf testbin
+fi;
+
 echo "Project clean"

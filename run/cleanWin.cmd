@@ -20,4 +20,8 @@ IF NOT EXIST include GOTO PASSINCLUDEDIR
 rmdir include /s /q
 :PASSINCLUDEDIR
 
+IF NOT EXIST testbin GOTO PASSTESTBINDIR
+rmdir testbin /s /q
+:PASSTESTBINDIR
+
 echo Project clean
