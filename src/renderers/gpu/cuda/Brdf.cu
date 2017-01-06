@@ -1,23 +1,24 @@
 #include "optix.h"
 #include "RendererObjects.hpp"
 #include "commonStructs.h"
+#include "random.h"
 
 
-rtDeclareVariable( float3,              shading_normal,   attribute shading_normal, );
-rtDeclareVariable( float3,              geometric_normal, attribute geometric_normal, );
+rtDeclareVariable( float3,               shading_normal,   attribute shading_normal, );
+rtDeclareVariable( float3,               geometric_normal, attribute geometric_normal, );
 
-rtDeclareVariable( PerRayData_radiance, prd_radiance,     rtPayload, );
-rtDeclareVariable( PerRayData_shadow,   prd_shadow,       rtPayload, );
+rtDeclareVariable( PerRayData_pathtrace, prd_current,      rtPayload, );
+rtDeclareVariable( PerRayData_shadow,    prd_shadow,       rtPayload, );
 
-rtDeclareVariable( optix::Ray,          ray,              rtCurrentRay, );
-rtDeclareVariable( float,               t_hit,            rtIntersectionDistance, );
+rtDeclareVariable( optix::Ray,           ray,              rtCurrentRay, );
+rtDeclareVariable( float,                t_hit,            rtIntersectionDistance, );
 
 
-rtDeclareVariable( unsigned int,        shadow_ray_type,  , );
-rtDeclareVariable( float,               scene_epsilon,    , );
-rtDeclareVariable( rtObject,            top_object,       , );
+rtDeclareVariable( unsigned int,         shadow_ray_type,  , );
+rtDeclareVariable( float,                scene_epsilon,    , );
+rtDeclareVariable( rtObject,             top_shadower,     , );
 
-rtBuffer< BasicLight > lights;
+rtBuffer< Light > lights;
 
 
 
@@ -35,7 +36,7 @@ closest_hit_normals( )
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
   float3 ffnormal         = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
-  prd_radiance.result = ffnormal * 0.5f + 0.5f;
+  prd_current.result = ffnormal * 0.5f + 0.5f;
 
 }
 
@@ -55,18 +56,73 @@ closest_hit_simple_shading( )
 
   float3 radiance = make_float3( 0.0f );
 
-  float3 hit_point = ray.origin + t_hit * ray.direction;
+  float3 hitPoint = ray.origin + t_hit * ray.direction;
+
+  // loop vars
+  float3 w_i;
+  float distToLightPow2, distToLight;
 
   for ( int i = 0; i < lights.size( ); ++i )
   {
 
-    BasicLight &light = lights[ i ];
+    Light &light = lights[ i ];
 
-    // direction and distance to light
-    float3 w_i            = light.pos - hit_point;
-    float distToLightPow2 = dot( w_i, w_i );
-    float distToLight     = sqrt( distToLightPow2 );
-    w_i /= distToLight; // normalizes w_i
+    float3 lightPos         = light.center;
+    float3 incidentRadiance = light.radiantFlux;
+
+
+    // randomly sample sphere (only light shape for now)
+    if ( prd_current.seed != static_cast< unsigned >( -1 ) )
+    {
+
+      float theta = rnd( prd_current.seed ) * 2 * M_PIf;
+      float u     = rnd( prd_current.seed ) * 2.0 - 1.0;
+
+      float xyCoeff = sqrt( 1.0 - u * u );
+
+      float3 samplePos = make_float3(
+                                     xyCoeff * cos( theta ),
+                                     xyCoeff * sin( theta ),
+                                     u
+                                     );
+
+      // sample on hemisphere in direction of point
+      if ( dot( samplePos, normalize( hitPoint - lightPos ) ) < 0.0f )
+      {
+
+        samplePos = -samplePos;
+
+      }
+
+      lightPos += samplePos * light.radius;
+
+      // direction and distance to light
+      w_i             = lightPos - hitPoint;
+      distToLightPow2 = dot( w_i, w_i );
+      distToLight     = sqrt( distToLightPow2 );
+      w_i            /= distToLight; // normalizes w_i
+
+      // lambertian emitter
+      ///\todo: Figure out correct term here
+      incidentRadiance = 0.5 * light.radiantFlux
+                         * dot( -w_i, samplePos ) / ( 8.0f * M_PIf * light.radius * light.radius );
+//      incidentRadiance = light.radiantFlux * max( 0.0, dot( -w_i, samplePos ) ) / ( 8.0f * M_PIf * light.radius * light.radius );
+
+    }
+    else
+    {
+
+      // direction and distance to light
+      w_i             = lightPos - hitPoint;
+      distToLightPow2 = dot( w_i, w_i );
+      distToLight     = sqrt( distToLightPow2 );
+      w_i            /= distToLight; // normalizes w_i
+
+      ///\todo: Figure out correct term here
+      incidentRadiance = 0.25 * light.radiantFlux / ( 8.0 * M_PIf * light.radius * light.radius ); // power / (pi * area)
+
+    }
+
 
     float cosAngle = dot( ffnormal, w_i );
 
@@ -79,7 +135,7 @@ closest_hit_simple_shading( )
 
       // shadow ray
       optix::Ray shadow_ray(
-                            hit_point,
+                            hitPoint,
                             w_i,
                             shadow_ray_type,
                             scene_epsilon,
@@ -87,19 +143,19 @@ closest_hit_simple_shading( )
                             );
 
       // shoot ray into scene
-      rtTrace( top_object, shadow_ray, shadow_prd );
+      rtTrace( top_shadower, shadow_ray, shadow_prd );
 
 
-      radiance += ( 1.0 / M_PIf )                        // lambertian pi normalization
-                  * ( light.radiance / distToLightPow2 ) // incident radiance
-                  * cosAngle                             // angle between normal and incident ray
-                  * shadow_prd.attenuation;              // attenuation from shadowing objects
+      radiance += ( 1.0 / M_PIf )                          // lambertian pi normalization
+                  * ( incidentRadiance / distToLightPow2 ) // inverse square law
+                  * cosAngle                               // angle between normal and incident ray
+                  * shadow_prd.attenuation;                // attenuation from shadowing objects
 
     }
 
   }
 
-  prd_radiance.result = radiance;
+  prd_current.result = radiance;
 
 } // closest_hit_simple_shading
 
@@ -116,7 +172,8 @@ void
 closest_hit_bsdf( )
 {
 
-  float3 albedo   = make_float3( 0.71f, 0.62f, 0.53f );
+//  float3 albedo   = make_float3( 0.13f ); // moon
+  float3 albedo   = make_float3( 0.71f, 0.62f, 0.53f ); // clay
   float roughness = 0.3f;
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
@@ -125,20 +182,75 @@ closest_hit_bsdf( )
 
   float3 radiance = make_float3( 0.0f );
 
-  float3 hit_point = ray.origin + t_hit * ray.direction;
+  float3 hitPoint = ray.origin + t_hit * ray.direction;
 
   float3 w_o = -ray.direction;
+
+  // loop vars
+  float3 w_i;
+  float distToLightPow2, distToLight;
 
   for ( int i = 0; i < lights.size( ); ++i )
   {
 
-    BasicLight &light = lights[ i ];
+    Light &light = lights[ i ];
 
-    // direction and distance to light
-    float3 w_i            = light.pos - hit_point;
-    float distToLightPow2 = dot( w_i, w_i );
-    float distToLight     = sqrt( distToLightPow2 );
-    w_i /= distToLight; // normalizes w_i
+    float3 lightPos         = light.center;
+    float3 incidentRadiance = light.radiantFlux;
+
+
+    // randomly sample sphere (only light shape for now)
+    if ( prd_current.seed != static_cast< unsigned >( -1 ) )
+    {
+
+      float theta = rnd( prd_current.seed ) * 2 * M_PIf;
+      float u     = rnd( prd_current.seed ) * 2.0 - 1.0;
+
+      float xyCoeff = sqrt( 1.0 - u * u );
+
+      float3 samplePos = make_float3(
+                                     xyCoeff * cos( theta ),
+                                     xyCoeff * sin( theta ),
+                                     u
+                                     );
+
+      // sample on hemisphere in direction of point
+      if ( dot( samplePos, normalize( hitPoint - lightPos ) ) < 0.0f )
+      {
+
+        samplePos = -samplePos;
+
+      }
+
+      lightPos += samplePos * light.radius;
+
+      // direction and distance to light
+      w_i             = lightPos - hitPoint;
+      distToLightPow2 = dot( w_i, w_i );
+      distToLight     = sqrt( distToLightPow2 );
+      w_i            /= distToLight; // normalizes w_i
+
+      // lambertian emitter
+      ///\todo: Figure out correct term here
+      incidentRadiance = 0.5 * light.radiantFlux
+                         * dot( -w_i, samplePos ) / ( 8.0f * M_PIf * light.radius * light.radius );
+//      incidentRadiance = light.radiantFlux * max( 0.0, dot( -w_i, samplePos ) ) / ( 8.0f * M_PIf * light.radius * light.radius );
+
+    }
+    else
+    {
+
+      // direction and distance to light
+      w_i             = lightPos - hitPoint;
+      distToLightPow2 = dot( w_i, w_i );
+      distToLight     = sqrt( distToLightPow2 );
+      w_i            /= distToLight; // normalizes w_i
+
+      ///\todo: Figure out correct term here
+      incidentRadiance = 0.25 * light.radiantFlux / ( 8.0 * M_PIf * light.radius * light.radius );
+
+    }
+
 
     float cosAngle = dot( ffnormal, w_i );
 
@@ -153,7 +265,7 @@ closest_hit_bsdf( )
 
       // shadow ray
       optix::Ray shadow_ray(
-                            hit_point,
+                            hitPoint,
                             w_i,
                             shadow_ray_type,
                             scene_epsilon,
@@ -161,13 +273,13 @@ closest_hit_bsdf( )
                             );
 
       // shoot ray into scene
-      rtTrace( top_object, shadow_ray, shadow_prd );
+      rtTrace( top_shadower, shadow_ray, shadow_prd );
 
 
       // only missing bsdf calculation right now
-      localRadiance = ( light.radiance / distToLightPow2 ) // incident radiance
-                      * cosAngle                           // angle between normal and incident ray
-                      * shadow_prd.attenuation;            // attenuation from shadowing objects
+      localRadiance = ( incidentRadiance / distToLightPow2 ) // incident radiance
+                      * cosAngle                             // angle between normal and incident ray
+                      * shadow_prd.attenuation;              // attenuation from shadowing objects
 
       if ( dot( localRadiance, localRadiance ) > 1.0e-9f )
       {
@@ -201,9 +313,24 @@ closest_hit_bsdf( )
 
   }
 
-  prd_radiance.result = radiance;
+  prd_current.result = radiance;
 
 } // closest_hit_bsdf
+
+
+
+rtDeclareVariable( float3, emissionRadiance, , );
+
+RT_PROGRAM
+void
+closest_hit_emission( )
+{
+
+  prd_current.radiance = prd_current.countEmitted ? emissionRadiance : make_float3( 0.f );
+  prd_current.done     = true;
+  prd_current.result   = prd_current.radiance;
+
+}
 
 
 

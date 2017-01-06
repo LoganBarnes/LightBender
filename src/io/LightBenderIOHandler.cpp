@@ -327,7 +327,7 @@ LightBenderIOHandler::_onGuiRender( )
   }
 
   //
-  // Box Scene
+  // Display type
   //
   ImGui::Separator( );
   ImGui::Text( "Display" );
@@ -342,6 +342,15 @@ LightBenderIOHandler::_onGuiRender( )
     upScene_->setDisplayType( displayType );
 
   }
+
+
+//  //
+//  // Light settings
+//  //
+//  ImGui::Separator( );
+//  ImGui::Text( "Lights" );
+
+//  ImGui::SliderFloat( "Radius: ", upScene_->lightRadius_, 0.05, 1.0 );
 
 
   //

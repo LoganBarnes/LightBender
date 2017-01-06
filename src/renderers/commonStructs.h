@@ -1,44 +1,96 @@
-/*
- * Copyright (c) 2016, NVIDIA CORPORATION. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of NVIDIA CORPORATION nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 #pragma once
 
 #include <optixu/optixu_vector_types.h>
+#include <optixu/optixu_math_stream_namespace.h>
 
-struct BasicLight
+
+///
+/// \brief The LightShape struct
+///
+struct LightShape
 {
-#if defined(__cplusplus)
-  typedef optix::float3 float3;
-#endif
-  float3 pos;
-  float3 radiance;
-  int    casts_shadow;
-  int    padding;      // make this structure 32 bytes -- powers of two are your friend!
+
+  enum LightShapes
+  {
+
+    SPHERE,
+    NUM_LIGHT_SHAPES
+
+  };
+
 };
 
 
+
+///
+/// \brief The Light struct
+///
+struct Light
+{
+
+#if defined( __cplusplus )
+  typedef optix::float3 float3;
+#endif
+
+  float3 center;                 // 12 : 12
+  float3 radiantFlux;               // 12 : 24
+  LightShape::LightShapes shape; // 4  : 28
+  float radius;                  // 4  : 32
+
+};
+
+
+
+#if defined( __cplusplus )
+
+typedef optix::float3 float3;
+
+
+///
+/// \brief createLight
+///
+static
+Light
+createLight(
+            float3                  center,
+            float3                  powerWatts,
+            LightShape::LightShapes shape,
+            float                   radius // should be dimensions eventually
+            )
+{
+
+  Light light;
+
+  light.center      = center;
+  light.shape       = shape;
+  light.radius      = radius;
+  light.radiantFlux = powerWatts;
+
+//  float area;
+
+//  switch ( light.shape )
+//  {
+
+//  case LightShape::SPHERE:
+
+//    // sphere area = 4 * pi * r^2
+//    area = 4.0f * M_PIf * light.radius * light.radius;
+
+//    break;
+
+
+//  default:
+
+//    throw std::runtime_error( "Unrecognized light shape" );
+
+//  } // switch
+
+//  light.radiance = powerWatts / ( area * M_PIf ); // W / m^2 sr
+
+  return light;
+
+} // createLight
+
+
+
+#endif // if defined( __cplusplus )

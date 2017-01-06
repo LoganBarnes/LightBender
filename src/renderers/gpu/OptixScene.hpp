@@ -77,9 +77,12 @@ public:
   /// \return
   ///////////////////////////////////////////////////////////////
   optix::Geometry createQuadPrimitive (
-                                       optix::float3 anchor = optix::make_float3( -1.0f, -1.0f,  0.0f ),
-                                       optix::float3 v1     = optix::make_float3(  2.0f,  0.0f,  0.0f ),
-                                       optix::float3 v2     = optix::make_float3(  0.0f,  2.0f,  0.0f )
+                                       optix::float3 anchor =
+                                         optix::make_float3( -1.0f, -1.0f, 0.0f ),
+                                       optix::float3 v1     =
+                                         optix::make_float3(  2.0f,  0.0f, 0.0f ),
+                                       optix::float3 v2     =
+                                         optix::make_float3(  0.0f,  2.0f, 0.0f )
                                        );
 
 
@@ -108,15 +111,24 @@ public:
   /// \param rotationAngle
   /// \param rotationAxis
   ///////////////////////////////////////////////////////////////
-  void attachToGroup(
-                     optix::Group         group,
-                     optix::GeometryGroup geomGroup,
-                     unsigned             childNum,
-                     optix::float3        translation   = optix::make_float3( 0.0f ),
-                     optix::float3        scale         = optix::make_float3( 1.0f ),
-                     float                rotationAngle = 0.0f,
-                     optix::float3        rotationAxis  = optix::make_float3( 0.0f, 1.0f, 0.0f )
-                     );
+  void attachToGroup (
+                      optix::Group group,
+                      optix::GeometryGroup geomGroup,
+                      unsigned childNum,
+                      optix::float3 translation   = optix::make_float3( 0.0f ),
+                      optix::float3 scale         = optix::make_float3( 1.0f ),
+                      float rotationAngle         = 0.0f,
+                      optix::float3 rotationAxis  = optix::make_float3( 0.0f, 1.0f, 0.0f )
+                      );
+
+
+  ///////////////////////////////////////////////////////////////
+  /// \brief createInputBuffer
+  /// \param input
+  /// \return
+  ///////////////////////////////////////////////////////////////
+  template< typename T >
+  optix::Buffer createInputBuffer ( const std::vector< T > &input );
 
 
 protected:
@@ -129,6 +141,31 @@ protected:
 private:
 
 };
+
+
+
+///
+/// \brief OptixScene::createInputBuffer
+/// \param input
+/// \return
+///
+template< typename T >
+optix::Buffer
+OptixScene::createInputBuffer( const std::vector< T > &input )
+{
+
+  optix::Buffer buffer = context_->createBuffer( RT_BUFFER_INPUT );
+
+  buffer->setFormat( RT_FORMAT_USER );
+  buffer->setElementSize( sizeof( T ) );
+  buffer->setSize( input.size( ) );
+  memcpy( buffer->map( ), input.data( ), input.size( ) * sizeof( T ) );
+  buffer->unmap( );
+
+  return buffer;
+
+}
+
 
 
 } // namespace light

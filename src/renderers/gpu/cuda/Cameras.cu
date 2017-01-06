@@ -5,33 +5,16 @@
 
 
 
-struct PerRayData_pathtrace
-{
+rtDeclareVariable( PerRayData_pathtrace, prd_current,       rtPayload, );
 
-  float3 result;
-  float3 radiance;
-  float3 attenuation;
-  float3 origin;
-  float3 direction;
-  unsigned seed;
-  int depth;
-  int countEmitted;
-  int done;
-  int inside;
+rtDeclareVariable( optix::Ray,           ray,               rtCurrentRay, );
+rtDeclareVariable( uint2,                launch_index,      rtLaunchIndex, );
+rtDeclareVariable( unsigned int,         frame_number,      , );
+rtDeclareVariable( unsigned int,         sqrt_num_samples,  , );
 
-};
-
-
-rtDeclareVariable( PerRayData_radiance, prd_radiance,      rtPayload, );
-
-rtDeclareVariable( optix::Ray,          ray,               rtCurrentRay, );
-rtDeclareVariable( uint2,               launch_index,      rtLaunchIndex, );
-rtDeclareVariable( unsigned int,        frame_number,      , );
-rtDeclareVariable( unsigned int,        sqrt_num_samples,  , );
-
-rtDeclareVariable( unsigned int,        radiance_ray_type, , );
-rtDeclareVariable( float,               scene_epsilon,     , );
-rtDeclareVariable( rtObject,            top_object,        , );
+rtDeclareVariable( unsigned int,         radiance_ray_type, , );
+rtDeclareVariable( float,                scene_epsilon,     , );
+rtDeclareVariable( rtObject,             top_object,        , );
 
 
 //
@@ -57,8 +40,7 @@ pinhole_camera( )
   float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
   float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;
 
-  float2 jitter_scale            = inv_screen / sqrt_num_samples;
-  unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
+  float2 jitter_scale = inv_screen / sqrt_num_samples;
 
   float3 totalRadiance = make_float3( 0.0f );
 
@@ -66,7 +48,9 @@ pinhole_camera( )
   unsigned x, y;
   float2 jitter;
 
-  // faster two for loops for x and y on gpu?
+  unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
+
+  // seems faster than two for loops for x and y on gpu
   while ( samples_per_pixel-- )
   {
 
@@ -87,9 +71,14 @@ pinhole_camera( )
                    scene_epsilon
                    );
 
-    PerRayData_radiance prd;
-    prd.importance = 1.0f;
-    prd.depth      = 0;
+    PerRayData_pathtrace prd;
+    prd.result       = make_float3( 0.f );
+    prd.attenuation  = make_float3( 1.f );
+    prd.countEmitted = true;
+    prd.done         = false;
+    prd.inside       = false;
+    prd.seed         = static_cast< unsigned >( -1 ); // overflow to max value
+    prd.depth        = 0;
 
     rtTrace( top_object, ray, prd );
 
@@ -97,7 +86,7 @@ pinhole_camera( )
 
   }
 
-  totalRadiance /= sqrt_num_samples * sqrt_num_samples ;
+  totalRadiance /= sqrt_num_samples * sqrt_num_samples;
 
   output_buffer[ launch_index ] = make_float4( totalRadiance, 1.0 );
 
@@ -113,26 +102,36 @@ void
 pathtrace_pinhole_camera( )
 {
 
-//  size_t2 screenSize = output_buffer.size( );
+  size_t2 screenSize = output_buffer.size( );
 
-//  float2 screenSizeInv = 1.0f / make_float2( screenSize ) * 2.f;
-//  float2 pixel         = ( make_float2( launch_index ) ) * screenSizeInv - 1.f;
+  float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
+  float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;
 
-//  float2 jitter_scale            = screenSizeInv / sqrt_num_samples;
-//  unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
-//  float3 result                  = make_float3( 0.0f );
+  float2 jitter_scale = inv_screen / sqrt_num_samples;
 
-//  unsigned int seed = tea< 16 >( screenSize.x * launch_index.y + launch_index.x, frame_number );
+  float3 totalRadiance = make_float3( 0.0f );
 
-//  do
-//  {
+  // loop vars
+  unsigned x, y;
+  float2 jitter;
 
-//    unsigned int x       = samples_per_pixel % sqrt_num_samples;
-//    unsigned int y       = samples_per_pixel / sqrt_num_samples;
-//    float2 jitter        = make_float2( x - rnd( seed ), y - rnd( seed ) );
-//    float2 d             = pixel + jitter * jitter_scale;
-//    float3 ray_origin    = eye;
-//    float3 ray_direction = normalize( d.x * U + d.y * V + W );
+  unsigned seed = tea< 16 >( screenSize.x * launch_index.y + launch_index.x, frame_number );
+
+  unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
+
+  // seems faster than two for loops for x and y on gpu
+  while ( samples_per_pixel-- )
+  {
+
+    x = samples_per_pixel % sqrt_num_samples;
+    y = samples_per_pixel / sqrt_num_samples;
+
+    // random jitter within sample area
+    jitter = make_float2( x + rnd( seed ), y + rnd( seed ) );
+
+    float2 d             = pixelCorner + jitter * jitter_scale;
+    float3 ray_origin    = eye;
+    float3 ray_direction = normalize( d.x * U + d.y * V + W );
 
 //    PerRayData_pathtrace prd;
 //    prd.result       = make_float3( 0.f );
@@ -190,55 +189,6 @@ pathtrace_pinhole_camera( )
 //    seed    = prd.seed;
 
 //  }
-//  while ( --samples_per_pixel );
-
-//  float3 pixel_color = result / ( sqrt_num_samples * sqrt_num_samples );
-
-//  if ( frame_number > 1 )
-//  {
-
-//    float a          = 1.0f / ( float ) frame_number;
-//    float b          = ( ( float ) frame_number - 1.0f ) * a;
-//    float3 old_color = make_float3( output_buffer[ launch_index ] );
-//    output_buffer[ launch_index ] = make_float4( a * pixel_color + b * old_color, 0.0f );
-
-//  }
-//  else
-//  {
-
-//    output_buffer[ launch_index ] = make_float4( pixel_color, 0.0f );
-
-//  }
-
-  size_t2 screenSize = output_buffer.size( );
-
-  float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
-  float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;
-
-  float2 jitter_scale            = inv_screen / sqrt_num_samples;
-  unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
-
-  float3 totalRadiance = make_float3( 0.0f );
-
-  // loop vars
-  unsigned x, y;
-  float2 jitter;
-
-  unsigned seed = tea< 16 >( screenSize.x * launch_index.y + launch_index.x, frame_number );
-
-  // faster two for loops for x and y on gpu?
-  while ( samples_per_pixel-- )
-  {
-
-    x = samples_per_pixel % sqrt_num_samples;
-    y = samples_per_pixel / sqrt_num_samples;
-
-    // no random jitter, just center value
-    jitter = make_float2( x + rnd( seed ), y + rnd( seed ) );
-
-    float2 d             = pixelCorner + jitter * jitter_scale;
-    float3 ray_origin    = eye;
-    float3 ray_direction = normalize( d.x * U + d.y * V + W );
 
     optix::Ray ray(
                    ray_origin,
@@ -247,9 +197,14 @@ pathtrace_pinhole_camera( )
                    scene_epsilon
                    );
 
-    PerRayData_radiance prd;
-    prd.importance = 1.0f;
-    prd.depth      = 0;
+    PerRayData_pathtrace prd;
+    prd.result       = make_float3( 0.f );
+    prd.attenuation  = make_float3( 1.f );
+    prd.countEmitted = true;
+    prd.done         = false;
+    prd.inside       = false;
+    prd.seed         = seed;
+    prd.depth        = 0;
 
     rtTrace( top_object, ray, prd );
 
@@ -257,13 +212,13 @@ pathtrace_pinhole_camera( )
 
   }
 
-  totalRadiance /= sqrt_num_samples * sqrt_num_samples ;
+  totalRadiance /= sqrt_num_samples * sqrt_num_samples;
 
   if ( frame_number > 1 )
   {
 
-    float a = 1.0f / static_cast< float >( frame_number );
-    float b = ( static_cast< float >( frame_number ) - 1.0f ) * a;
+    float a            = 1.0f / static_cast< float >( frame_number );
+    float b            = ( static_cast< float >( frame_number ) - 1.0f ) * a;
     float3 oldRadiance = make_float3( output_buffer[ launch_index ] );
     output_buffer[ launch_index ] = make_float4( a * totalRadiance + b * oldRadiance, 1.0f );
 
@@ -302,9 +257,14 @@ orthographic_camera( )
                                    RT_DEFAULT_MAX
                                    );
 
-  PerRayData_radiance prd;
-  prd.importance = 1.f;
-  prd.depth      = 0;
+  PerRayData_pathtrace prd;
+  prd.result       = make_float3( 0.f );
+  prd.attenuation  = make_float3( 1.f );
+  prd.countEmitted = true;
+  prd.done         = false;
+  prd.inside       = false;
+  prd.seed         = static_cast< unsigned >( -1 );
+  prd.depth        = 0;
 
   rtTrace( top_object, ray, prd );
 
@@ -337,9 +297,14 @@ pathtrace_orthographic_camera( )
                                    RT_DEFAULT_MAX
                                    );
 
-  PerRayData_radiance prd;
-  prd.importance = 1.f;
-  prd.depth      = 0;
+  PerRayData_pathtrace prd;
+  prd.result       = make_float3( 0.f );
+  prd.attenuation  = make_float3( 1.f );
+  prd.countEmitted = true;
+  prd.done         = false;
+  prd.inside       = false;
+  prd.seed         = static_cast< unsigned >( -1 );
+  prd.depth        = 0;
 
   rtTrace( top_object, ray, prd );
 
@@ -377,7 +342,7 @@ void
 miss( )
 {
 
-  prd_radiance.result = bg_color;
+  prd_current.result = bg_color;
 
 }
 

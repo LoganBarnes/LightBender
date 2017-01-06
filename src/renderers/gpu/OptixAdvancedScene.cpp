@@ -5,8 +5,25 @@
 #include "commonStructs.h"
 
 
+//#define BIG_AND_CLOSE
+
+
 namespace light
 {
+
+#ifndef BIG_AND_CLOSE
+
+const optix::float3 lightLocation = optix::make_float3( 2.0f, 6.0f, 4.0f );
+const optix::float3 lightPower    = optix::make_float3( 120.f );
+constexpr float lightRadius       = 0.1f;
+
+#else
+
+const optix::float3 lightLocation = optix::make_float3( 1.0f, 3.0f, -2.0f );
+const optix::float3 lightPower    = optix::make_float3( 1200.f );
+constexpr float lightRadius       = 0.75f;
+
+#endif
 
 
 ///////////////////////////////////////////////////////////////
@@ -46,6 +63,26 @@ void
 OptixAdvancedScene::_buildGeometry( )
 {
 
+  optix::Material lightMaterial = context_->createMaterial( );
+
+  // Materials
+  std::string brdfPtxFile(
+                          light::RES_PATH
+                          + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
+                          );
+
+  lightMaterial->setClosestHitProgram( 0, context_->createProgramFromPTXFile(
+                                                                             brdfPtxFile,
+                                                                             "closest_hit_emission"
+                                                                             ) );
+
+//  // for shadowing
+//  lightMaterial->setAnyHitProgram( 1, context_->createProgramFromPTXFile(
+//                                                                         brdfPtxFile,
+//                                                                         "any_hit_occlusion"
+//                                                                         ) );
+
+
   // Create primitives used in the scene
   optix::Geometry quadPrim   = createQuadPrimitive( );
   optix::Geometry boxPrim    = createBoxPrimitive( );
@@ -53,7 +90,7 @@ OptixAdvancedScene::_buildGeometry( )
 
   // top group everything will get attached to
   optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount( 5 );
+  topGroup->setChildCount( 6 );
 
   // attach materials to geometries
   optix::GeometryGroup quadGroup = createGeomGroup(
@@ -76,6 +113,13 @@ OptixAdvancedScene::_buildGeometry( )
                                                      "NoAccel",
                                                      "NoAccel"
                                                      );
+
+  optix::GeometryGroup lightSphereGroup = createGeomGroup(
+                                                          { spherePrim },
+                                                          { lightMaterial },
+                                                          "NoAccel",
+                                                          "NoAccel"
+                                                          );
 
 
   // ground quad
@@ -105,9 +149,19 @@ OptixAdvancedScene::_buildGeometry( )
                 optix::make_float3( 0.5f )
                 );
 
+  // light
+  attachToGroup(
+                topGroup, lightSphereGroup, 5,
+                lightLocation,
+                optix::make_float3( lightRadius )
+                );
+
+
+
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
-  context_[ "top_object" ]->set( topGroup );
+  context_[ "top_object"   ]->set( topGroup );
+  context_[ "top_shadower" ]->set( topGroup );
 
 } // OptixAdvancedScene::_buildScene
 
@@ -120,29 +174,26 @@ void
 OptixAdvancedScene::_addLights( )
 {
 
-  std::vector< BasicLight > lights = {
-    { optix::make_float3(  10.0f, 30.0f, 20.0f ),
-      optix::make_float3( 2000.0f ),
-      1, 0 },
+  std::vector< Light > lights =
+  {
 
-    { optix::make_float3( -10.0f, 20.0f, 15.0f ),
-      optix::make_float3( 900.0f ),
-      1, 0 },
+    createLight(
+                lightLocation,
+                lightPower,
+                LightShape::SPHERE,
+                lightRadius
+                )
 
-    { optix::make_float3( 0.0f, 2.0f, -35.0f ),
-      optix::make_float3( 400.0f ),
-      1, 0 }
   };
 
-  optix::Buffer lightBuffer = context_->createBuffer( RT_BUFFER_INPUT );
+  float area = M_PIf * 4.0 * lightRadius * lightRadius;
 
-  lightBuffer->setFormat( RT_FORMAT_USER );
-  lightBuffer->setElementSize( sizeof( lights[ 0 ] ) );
-  lightBuffer->setSize( lights.size( ) );
-  memcpy( lightBuffer->map( ), lights.data( ), lights.size( ) * sizeof( lights[ 0 ] ) );
-  lightBuffer->unmap( );
+  context_[ "emissionRadiance" ]->setFloat(
+                                           lightPower
+                                           / ( M_PIf * area )
+                                           );
 
-  context_[ "lights" ]->set( lightBuffer );
+  context_[ "lights" ]->set( createInputBuffer( lights ) );
 
 } // OptixAdvancedScene::_addLights
 

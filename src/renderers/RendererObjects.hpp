@@ -51,3 +51,21 @@ struct PerRayData_shadow
   float3 attenuation;
 };
 
+
+
+struct PerRayData_pathtrace
+{
+
+  float3 result;
+  float3 radiance;
+  float3 attenuation;
+  float3 origin;
+  float3 direction;
+  unsigned seed;
+  int depth;
+  int countEmitted;
+  int done;
+  int inside;
+
+};
+
