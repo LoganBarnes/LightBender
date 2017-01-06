@@ -186,7 +186,7 @@ OptixAdvancedScene::_addLights( )
 
   };
 
-  float area = M_PIf * 4.0 * lightRadius * lightRadius;
+  float area = M_PIf * 4.0f * lightRadius * lightRadius;
 
   context_[ "emissionRadiance" ]->setFloat(
                                            lightPower

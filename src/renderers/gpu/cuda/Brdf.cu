@@ -1,7 +1,7 @@
-#include "optix.h"
-#include "RendererObjects.hpp"
+#include <optix.h>
 #include "commonStructs.h"
 #include "random.h"
+#include "RendererObjects.hpp" // should be last to avoid FLT_MAX redefintion warning
 
 
 rtDeclareVariable( float3,               shading_normal,   attribute shading_normal, );

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "optix.h"
 #include "optix_math.h"
@@ -5,6 +6,10 @@
 //#include "commonStructs.h"
 
 using namespace optix;
+
+#ifdef FLT_MAX
+#undef FLT_MAX
+#endif
 
 #define FLT_MAX         1e30;
 
