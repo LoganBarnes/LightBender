@@ -41,6 +41,9 @@ OptixAdvancedScene::OptixAdvancedScene(
   _buildGeometry( );
   _addLights( );
 
+  context_[ "max_bounces"  ]->setUint( 5 );
+  context_[ "first_bounce" ]->setUint( 0 );
+
   context_->validate( );
   context_->compile( );
 

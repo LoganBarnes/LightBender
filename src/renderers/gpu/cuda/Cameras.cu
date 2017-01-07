@@ -7,8 +7,9 @@
 
 rtDeclareVariable( PerRayData_pathtrace, prd_current,       rtPayload, );
 
-rtDeclareVariable( optix::Ray,           ray,               rtCurrentRay, );
+rtDeclareVariable( optix::Ray,           ray,               rtCurrentRay,  );
 rtDeclareVariable( uint2,                launch_index,      rtLaunchIndex, );
+
 rtDeclareVariable( unsigned int,         frame_number,      , );
 rtDeclareVariable( unsigned int,         sqrt_num_samples,  , );
 
@@ -16,6 +17,8 @@ rtDeclareVariable( unsigned int,         radiance_ray_type, , );
 rtDeclareVariable( float,                scene_epsilon,     , );
 rtDeclareVariable( rtObject,             top_object,        , );
 
+rtDeclareVariable( unsigned int,         max_bounces,       , );
+rtDeclareVariable( unsigned int,         first_bounce,      , );
 
 //
 // Pinhole camera implementation
@@ -64,6 +67,16 @@ pinhole_camera( )
     float3 ray_origin    = eye;
     float3 ray_direction = normalize( d.x * U + d.y * V + W );
 
+    PerRayData_pathtrace prd;
+    prd.result       = make_float3( 0.f );
+    prd.attenuation  = make_float3( 1.f );
+    prd.radiance     = make_float3( 0.f );
+    prd.countEmitted = true;
+    prd.done         = false;
+    prd.inside       = false;
+    prd.seed         = static_cast< unsigned >( -1 ); // overflow to max value
+    prd.depth        = 0;
+
     optix::Ray ray(
                    ray_origin,
                    ray_direction,
@@ -71,18 +84,9 @@ pinhole_camera( )
                    scene_epsilon
                    );
 
-    PerRayData_pathtrace prd;
-    prd.result       = make_float3( 0.f );
-    prd.attenuation  = make_float3( 1.f );
-    prd.countEmitted = true;
-    prd.done         = false;
-    prd.inside       = false;
-    prd.seed         = static_cast< unsigned >( -1 ); // overflow to max value
-    prd.depth        = 0;
-
     rtTrace( top_object, ray, prd );
 
-    totalRadiance += prd.result;
+    totalRadiance += prd.radiance;
 
   }
 
@@ -133,80 +137,59 @@ pathtrace_pinhole_camera( )
     float3 ray_origin    = eye;
     float3 ray_direction = normalize( d.x * U + d.y * V + W );
 
-//    PerRayData_pathtrace prd;
-//    prd.result       = make_float3( 0.f );
-//    prd.attenuation  = make_float3( 1.f );
-//    prd.countEmitted = true;
-//    prd.done         = false;
-//    prd.inside       = false;
-//    prd.seed         = seed;
-//    prd.depth        = 0;
-
-//    for ( ; ; )
-//    {
-
-//      Ray ray = make_Ray( ray_origin,
-//                         ray_direction,
-//                         pathtrace_ray_type,
-//                         scene_epsilon,
-//                         RT_DEFAULT_MAX );
-
-//      rtTrace( top_object, ray, prd );
-
-//      if ( prd.done )
-//      {
-
-//        prd.result += prd.radiance * prd.attenuation;
-//        break;
-
-//      }
-
-//      // RR
-//      if ( prd.depth >= rr_begin_depth )
-//      {
-
-//        float pcont = fmaxf( prd.attenuation );
-
-//        if ( rnd( prd.seed ) >= pcont )
-//        {
-
-//          break;
-
-//        }
-
-//        prd.attenuation /= pcont;
-
-//      }
-
-//      prd.depth++;
-//      prd.result   += prd.radiance * prd.attenuation;
-//      ray_origin    = prd.origin;
-//      ray_direction = prd.direction;
-
-//    } // eye ray
-
-//    result += prd.result;
-//    seed    = prd.seed;
-
-//  }
-
-    optix::Ray ray(
-                   ray_origin,
-                   ray_direction,
-                   radiance_ray_type,
-                   scene_epsilon
-                   );
-
     PerRayData_pathtrace prd;
     prd.result       = make_float3( 0.f );
     prd.attenuation  = make_float3( 1.f );
+    prd.radiance     = make_float3( 0.f );
     prd.countEmitted = true;
     prd.done         = false;
     prd.inside       = false;
     prd.seed         = seed;
     prd.depth        = 0;
 
-    rtTrace( top_object, ray, prd );
+    for ( ; ; )
+    {
+
+
+      optix::Ray ray(
+                     ray_origin,
+                     ray_direction,
+                     radiance_ray_type,
+                     scene_epsilon
+                     );
+
+      rtTrace( top_object, ray, prd );
+
+      float3 attenuation = prd.attenuation;
+
+      if ( prd.done )
+      {
+
+        prd.result += prd.radiance * attenuation;
+        break;
+
+      }
+
+      if ( prd.depth > max_bounces )
+      {
+
+        prd.result += prd.radiance * attenuation;
+        break;
+
+      }
+
+      if ( prd.depth >= first_bounce )
+      {
+
+        prd.result += prd.radiance * attenuation;
+
+      }
+
+      ++prd.depth;
+      ray_origin    = prd.origin;
+      ray_direction = prd.direction;
+
+    }
 
     totalRadiance += prd.result;
 
@@ -246,8 +229,19 @@ orthographic_camera( )
 
   float2 pixelCorner   = make_float2( launch_index );
   float2 d             = ( pixelCorner + 0.5 ) / make_float2( screenSize ) * 2.f - 1.f; // film coords
-  float3 ray_origin    = eye + d.x * U + d.y * V;                          // eye + offset in film space
-  float3 ray_direction = normalize( W );                                   // always parallel view direction
+  float3 ray_origin    = eye + d.x * U + d.y * V;                                       // eye + offset in film space
+  float3 ray_direction = normalize( W );                                                // always parallel view direction
+
+  PerRayData_pathtrace prd;
+
+  prd.result       = make_float3( 0.f );
+  prd.attenuation  = make_float3( 1.f );
+  prd.radiance     = make_float3( 0.f );
+  prd.countEmitted = true;
+  prd.done         = false;
+  prd.inside       = false;
+  prd.seed         = static_cast< unsigned >( -1 );
+  prd.depth        = 0;
 
   optix::Ray ray = optix::make_Ray(
                                    ray_origin,
@@ -256,15 +250,6 @@ orthographic_camera( )
                                    scene_epsilon,
                                    RT_DEFAULT_MAX
                                    );
-
-  PerRayData_pathtrace prd;
-  prd.result       = make_float3( 0.f );
-  prd.attenuation  = make_float3( 1.f );
-  prd.countEmitted = true;
-  prd.done         = false;
-  prd.inside       = false;
-  prd.seed         = static_cast< unsigned >( -1 );
-  prd.depth        = 0;
 
   rtTrace( top_object, ray, prd );
 
@@ -289,6 +274,17 @@ pathtrace_orthographic_camera( )
   float3 ray_origin    = eye + d.x * U + d.y * V;                          // eye + offset in film space
   float3 ray_direction = normalize( W );                                   // always parallel view direction
 
+  PerRayData_pathtrace prd;
+
+  prd.result       = make_float3( 0.f );
+  prd.attenuation  = make_float3( 1.f );
+  prd.radiance     = make_float3( 0.f );
+  prd.countEmitted = true;
+  prd.done         = false;
+  prd.inside       = false;
+  prd.seed         = static_cast< unsigned >( -1 );
+  prd.depth        = 0;
+
   optix::Ray ray = optix::make_Ray(
                                    ray_origin,
                                    ray_direction,
@@ -296,15 +292,6 @@ pathtrace_orthographic_camera( )
                                    scene_epsilon,
                                    RT_DEFAULT_MAX
                                    );
-
-  PerRayData_pathtrace prd;
-  prd.result       = make_float3( 0.f );
-  prd.attenuation  = make_float3( 1.f );
-  prd.countEmitted = true;
-  prd.done         = false;
-  prd.inside       = false;
-  prd.seed         = static_cast< unsigned >( -1 );
-  prd.depth        = 0;
 
   rtTrace( top_object, ray, prd );
 
@@ -342,7 +329,8 @@ void
 miss( )
 {
 
-  prd_current.result = bg_color;
+  prd_current.radiance = bg_color;
+  prd_current.done     = true;
 
 }
 

@@ -1,7 +1,36 @@
 #include <optix.h>
+#include <optixu/optixu_math_stream_namespace.h>
 #include "commonStructs.h"
 #include "random.h"
 #include "RendererObjects.hpp" // should be last to avoid FLT_MAX redefintion warning
+
+
+// Create Orthonormal Basis from normalized vector
+static
+__device__ __inline__
+void
+createONB(
+          const optix::float3 &n,
+          optix::float3       &U,
+          optix::float3       &V
+          )
+{
+  using namespace optix;
+
+  U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
+
+  if ( dot( U, U ) < 1.e-3f )
+  {
+    U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
+  }
+
+  U = normalize( U );
+  V = cross( n, U );
+}
+
+
+
+const float simpleShadeConstant = 0.8f;
 
 
 rtDeclareVariable( float3,               shading_normal,   attribute shading_normal, );
@@ -36,7 +65,7 @@ closest_hit_normals( )
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
   float3 ffnormal         = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
-  prd_current.result = ffnormal * 0.5f + 0.5f;
+  prd_current.radiance = ffnormal * 0.5f + 0.5f;
 
 }
 
@@ -58,6 +87,27 @@ closest_hit_simple_shading( )
 
   float3 hitPoint = ray.origin + t_hit * ray.direction;
 
+  if ( prd_current.seed != static_cast< unsigned >( -1 ) )
+  {
+
+    prd_current.origin = hitPoint;
+
+    float z1 = rnd( prd_current.seed );
+    float z2 = rnd( prd_current.seed );
+    float3 p;
+
+    cosine_sample_hemisphere( z1, z2, p );
+
+    float3 v1, v2;
+    createONB( ffnormal, v1, v2 );
+
+    prd_current.direction    = v1 * p.x + v2 * p.y + ffnormal * p.z;
+    prd_current.attenuation *= make_float3( simpleShadeConstant );   // use the albedo as the diffuse response
+    prd_current.countEmitted = false;
+
+  }
+
+
   // loop vars
   float3 w_i;
   float distToLightPow2, distToLight;
@@ -68,7 +118,7 @@ closest_hit_simple_shading( )
     Light &light = lights[ i ];
 
     float3 lightPos         = light.center;
-    float3 incidentRadiance = light.radiantFlux;
+    float3 incidentRadiance = light.radiantFlux / ( 8.0 * M_PIf * light.radius * light.radius );
 
 
     // randomly sample sphere (only light shape for now)
@@ -104,9 +154,7 @@ closest_hit_simple_shading( )
 
       // lambertian emitter
       ///\todo: Figure out correct term here
-      incidentRadiance = 0.5 * light.radiantFlux
-                         * dot( -w_i, samplePos ) / ( 8.0f * M_PIf * light.radius * light.radius );
-//      incidentRadiance = light.radiantFlux * max( 0.0, dot( -w_i, samplePos ) ) / ( 8.0f * M_PIf * light.radius * light.radius );
+      incidentRadiance *= 0.5 * dot( -w_i, samplePos );
 
     }
     else
@@ -119,7 +167,7 @@ closest_hit_simple_shading( )
       w_i            /= distToLight; // normalizes w_i
 
       ///\todo: Figure out correct term here
-      incidentRadiance = 0.25 * light.radiantFlux / ( 8.0 * M_PIf * light.radius * light.radius ); // power / (pi * area)
+      incidentRadiance *= 0.25;
 
     }
 
@@ -146,7 +194,7 @@ closest_hit_simple_shading( )
       rtTrace( top_shadower, shadow_ray, shadow_prd );
 
 
-      radiance += ( 1.0 / M_PIf )                          // lambertian pi normalization
+      radiance += ( simpleShadeConstant / M_PIf )          // lambertian pi normalization
                   * ( incidentRadiance / distToLightPow2 ) // inverse square law
                   * cosAngle                               // angle between normal and incident ray
                   * shadow_prd.attenuation;                // attenuation from shadowing objects
@@ -155,7 +203,7 @@ closest_hit_simple_shading( )
 
   }
 
-  prd_current.result = radiance;
+  prd_current.radiance = radiance;
 
 } // closest_hit_simple_shading
 
@@ -186,6 +234,26 @@ closest_hit_bsdf( )
 
   float3 w_o = -ray.direction;
 
+  if ( prd_current.seed != static_cast< unsigned >( -1 ) )
+  {
+
+    prd_current.origin = hitPoint;
+
+    float z1 = rnd( prd_current.seed );
+    float z2 = rnd( prd_current.seed );
+    float3 p;
+
+    cosine_sample_hemisphere( z1, z2, p );
+
+    float3 v1, v2;
+    createONB( ffnormal, v1, v2 );
+
+    prd_current.direction    = v1 * p.x + v2 * p.y + ffnormal * p.z;
+    prd_current.attenuation *= albedo;  // use the albedo as the diffuse response
+    prd_current.countEmitted = false;
+
+  }
+
   // loop vars
   float3 w_i;
   float distToLightPow2, distToLight;
@@ -196,14 +264,14 @@ closest_hit_bsdf( )
     Light &light = lights[ i ];
 
     float3 lightPos         = light.center;
-    float3 incidentRadiance = light.radiantFlux;
+    float3 incidentRadiance = light.radiantFlux / ( 8.0f * M_PIf * light.radius * light.radius );
 
 
     // randomly sample sphere (only light shape for now)
     if ( prd_current.seed != static_cast< unsigned >( -1 ) )
     {
 
-      float theta = rnd( prd_current.seed ) * 2 * M_PIf;
+      float theta = rnd( prd_current.seed ) * 2.0 * M_PIf;
       float u     = rnd( prd_current.seed ) * 2.0 - 1.0;
 
       float xyCoeff = sqrt( 1.0 - u * u );
@@ -232,9 +300,7 @@ closest_hit_bsdf( )
 
       // lambertian emitter
       ///\todo: Figure out correct term here
-      incidentRadiance = 0.5 * light.radiantFlux
-                         * dot( -w_i, samplePos ) / ( 8.0f * M_PIf * light.radius * light.radius );
-//      incidentRadiance = light.radiantFlux * max( 0.0, dot( -w_i, samplePos ) ) / ( 8.0f * M_PIf * light.radius * light.radius );
+      incidentRadiance *= 0.5 * dot( -w_i, samplePos );
 
     }
     else
@@ -247,7 +313,7 @@ closest_hit_bsdf( )
       w_i            /= distToLight; // normalizes w_i
 
       ///\todo: Figure out correct term here
-      incidentRadiance = 0.25 * light.radiantFlux / ( 8.0 * M_PIf * light.radius * light.radius );
+      incidentRadiance *= 0.25;
 
     }
 
@@ -276,7 +342,7 @@ closest_hit_bsdf( )
       rtTrace( top_shadower, shadow_ray, shadow_prd );
 
 
-      // only missing bsdf calculation right now
+      // bsdf calculation added below
       localRadiance = ( incidentRadiance / distToLightPow2 ) // incident radiance
                       * cosAngle                             // angle between normal and incident ray
                       * shadow_prd.attenuation;              // attenuation from shadowing objects
@@ -313,7 +379,7 @@ closest_hit_bsdf( )
 
   }
 
-  prd_current.result = radiance;
+  prd_current.radiance = radiance;
 
 } // closest_hit_bsdf
 
@@ -328,7 +394,6 @@ closest_hit_emission( )
 
   prd_current.radiance = prd_current.countEmitted ? emissionRadiance : make_float3( 0.f );
   prd_current.done     = true;
-  prd_current.result   = prd_current.radiance;
 
 }
 

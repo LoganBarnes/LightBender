@@ -24,6 +24,9 @@ OptixBasicScene::OptixBasicScene(
   _buildGeometry( );
   _addLights( );
 
+  context_[ "max_bounces"  ]->setUint( 5 );
+  context_[ "first_bounce" ]->setUint( 0 );
+
   context_->validate( );
   context_->compile( );
 
@@ -103,7 +106,7 @@ OptixBasicScene::_addLights( )
   {
 
     createLight(
-                optix::make_float3(  2.0f, 6.0f, 4.0f ),
+                optix::make_float3(   2.0f, 6.0f, 4.0f ),
                 optix::make_float3( 120.0f ),
                 LightShape::SPHERE,
                 0.1f
