@@ -102,7 +102,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                                         );
 
 
-  _setScene( );
+      _setScene( );
 
 
   //
@@ -301,23 +301,22 @@ LightBenderIOHandler::_onGuiRender( )
     {
 
       int oldBounces = maxBounces;
-      int oldBounce  = firstBounce;
-
-      ImGui::SliderInt( "Max Bounces ",   &maxBounces,  1, 10 );
-      ImGui::SliderInt( "First Bounces ", &firstBounce, 0,  9 );
+      ImGui::SliderInt( "Max Bounces ",   &maxBounces, 0, 10 );
+      maxBounces = std::max( firstBounce, maxBounces );
 
       if ( oldBounces != maxBounces )
       {
-
         upScene_->setMaxBounces( static_cast< unsigned >( maxBounces ) );
-
       }
+
+
+      int oldBounce = firstBounce;
+      ImGui::SliderInt( "First Bounces ", &firstBounce, 0, 10 );
+      firstBounce = std::min( firstBounce, maxBounces );
 
       if ( oldBounce != firstBounce )
       {
-
         upScene_->setFirstBounce( static_cast< unsigned >( firstBounce ) );
-
       }
 
     }

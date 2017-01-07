@@ -5,7 +5,7 @@
 #include "commonStructs.h"
 
 
-//#define BIG_AND_CLOSE
+#define BIG_AND_CLOSE
 
 
 namespace light
@@ -19,7 +19,7 @@ constexpr float lightRadius       = 0.1f;
 
 #else
 
-const optix::float3 lightLocation = optix::make_float3( 1.0f, 3.5f, -2.5f );
+const optix::float3 lightLocation = optix::make_float3( 1.0f, 4.0f, -3.0f );
 const optix::float3 lightPower    = optix::make_float3( 2500.f );
 constexpr float lightRadius       = 0.7f;
 
@@ -79,12 +79,6 @@ OptixAdvancedScene::_buildGeometry( )
                                                                              "closest_hit_emission"
                                                                              ) );
 
-//  // for shadowing
-//  lightMaterial->setAnyHitProgram( 1, context_->createProgramFromPTXFile(
-//                                                                         brdfPtxFile,
-//                                                                         "any_hit_occlusion"
-//                                                                         ) );
-
 
   // Create primitives used in the scene
   optix::Geometry quadPrim   = createQuadPrimitive( );
@@ -93,7 +87,13 @@ OptixAdvancedScene::_buildGeometry( )
 
   // top group everything will get attached to
   optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount( 6 );
+  topGroup->setChildCount(
+      #ifdef BIG_AND_CLOSE
+        7
+      #else
+        6
+      #endif
+        );
 
   // attach materials to geometries
   optix::GeometryGroup quadGroup = createGeomGroup(
@@ -160,6 +160,16 @@ OptixAdvancedScene::_buildGeometry( )
                 );
 
 
+#ifdef BIG_AND_CLOSE
+
+  // light
+  attachToGroup(
+                topGroup, lightSphereGroup, 6,
+                optix::make_float3( -1.5f, 1.0f, 4.0f ),
+                optix::make_float3( 0.75f )
+                );
+#endif
+
 
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
@@ -186,6 +196,16 @@ OptixAdvancedScene::_addLights( )
                 LightShape::SPHERE,
                 lightRadius
                 )
+
+  #ifdef BIG_AND_CLOSE
+
+    , createLight(
+                  optix::float3 { -1.5f, 1.0f, 4.0f },
+                  optix::float3 { 500.0f, 500.0f, 500.0f },
+                  LightShape::SPHERE,
+                  0.75f
+                  )
+  #endif
 
   };
 
