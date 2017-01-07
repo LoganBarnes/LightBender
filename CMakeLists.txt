@@ -142,6 +142,7 @@ set(
     ${SRC_DIR}/renderers/gpu/OptixScene.cpp
     ${SRC_DIR}/renderers/gpu/OptixBasicScene.cpp
     ${SRC_DIR}/renderers/gpu/OptixAdvancedScene.cpp
+    ${SRC_DIR}/renderers/gpu/OptixFileScene.cpp
 
     ${SRC_DIR}/io/LightBenderIOHandler.cpp
     ${SRC_DIR}/io/LightBenderCallback.cpp

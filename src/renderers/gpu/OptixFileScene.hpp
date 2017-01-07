@@ -1,5 +1,5 @@
-#ifndef OptixBasicScene_hpp
-#define OptixBasicScene_hpp
+#ifndef OptixFileScene_hpp
+#define OptixFileScene_hpp
 
 
 #include "OptixScene.hpp"
@@ -10,39 +10,36 @@ namespace light
 
 
 /////////////////////////////////////////////
-/// \brief The OptixBasicScene class
+/// \brief The OptixFileScene class
 ///
 /// \author Logan Barnes
 /////////////////////////////////////////////
-class OptixBasicScene : public OptixScene
+class OptixFileScene : public OptixScene
 {
 
 public:
 
   ///////////////////////////////////////////////////////////////
-  /// \brief OptixBasicScene
+  /// \brief OptixFileScene
   ///////////////////////////////////////////////////////////////
-  OptixBasicScene(
-                  int      width,
-                  int      height,
-                  unsigned vbo
-                  );
+  OptixFileScene(
+                 int                width,
+                 int                height,
+                 unsigned           vbo,
+                 const std::string &filename
+                 );
 
 
   ///////////////////////////////////////////////////////////////
-  /// \brief ~OptixBasicScene
+  /// \brief ~OptixFileScene
   ///////////////////////////////////////////////////////////////
   virtual
-  ~OptixBasicScene( );
+  ~OptixFileScene( );
 
 
 protected:
 
 private:
-
-  void _buildGeometry ( );
-  void _addLights ( );
-
 
 
 };
@@ -51,4 +48,4 @@ private:
 } // namespace light
 
 
-#endif // OptixBasicScene_hpp
+#endif // OptixFileScene_hpp

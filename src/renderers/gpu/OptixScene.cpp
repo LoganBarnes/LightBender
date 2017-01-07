@@ -51,6 +51,14 @@ OptixScene::OptixScene(
                                                                           "any_hit_occlusion"
                                                                           ) );
 
+
+  // defaults
+  setDisplayType( 2 ); // oren-nayar diffuse brdf
+  setCameraType ( 0 ); // basic non-pathtracer
+  setSqrtSamples( 1 ); // single sample per pixel on each pass
+  setMaxBounces ( 5 ); // only allow 5 bounces
+  setFirstBounce( 0 ); // start rendering on first bounce
+
 }
 
 
