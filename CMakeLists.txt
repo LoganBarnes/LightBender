@@ -157,6 +157,7 @@ set(
 set(
     TESTING_LINK_LIBS
     ${GMOCK_BOTH_LIBS}
+    ${SHARED_LINK_LIBS}
     )
 
 set(

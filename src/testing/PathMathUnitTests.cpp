@@ -2,7 +2,7 @@
 #include <cmath>
 #include "gmock/gmock.h"
 #include <optixu/optixpp_namespace.h>
-#include <optixu/optixu_math_stream_namespace.h>
+#include "optixMod/optix_math_stream_namespace_mod.h"
 #include "random.h"
 
 
@@ -34,12 +34,12 @@ protected:
     int totalRows = static_cast< int >( screen.y * sqrt_num_samples );
     int totalCols = static_cast< int >( screen.x * sqrt_num_samples );
 
-    for ( int y = -totalRows + 1; y <= totalRows - 1; y += 2 )
+    for ( int y = -totalRows + 1; y < totalRows; y += 2 )
     {
 
       float yf = y * 1.0f / totalRows;
 
-      for ( int x = -totalCols + 1; x <= totalCols - 1; x += 2 )
+      for ( int x = -totalCols + 1; x < totalCols; x += 2 )
       {
 
         float xf = x * 1.0f / totalCols;
@@ -310,8 +310,13 @@ MATCHER( Float2Ge, "is less than or equal to" )
 ////////////////////////////////////////////////////////
 // test pointwise container comparison
 ////////////////////////////////////////////////////////
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+
 TEST_F( PathMathUnitTests, PointwiseMatcherHelpers )
 {
+
+#pragma GCC diagnostic pop
 
   using namespace ::testing;
 
@@ -348,8 +353,13 @@ TEST_F( PathMathUnitTests, PointwiseMatcherHelpers )
 //////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+
 TEST_F( PathMathUnitTests, VectorBuilderHelpers )
 {
+
+#pragma GCC diagnostic pop
 
   using namespace ::testing;
 
@@ -443,8 +453,13 @@ TEST_F( PathMathUnitTests, VectorBuilderHelpers )
 //////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+
 TEST_F( PathMathUnitTests, NoJitterSingleSample )
 {
+
+#pragma GCC diagnostic pop
 
   using namespace ::testing;
 
@@ -517,8 +532,13 @@ TEST_F( PathMathUnitTests, NoJitterSingleSample )
 //////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+
 TEST_F( PathMathUnitTests, JitterSingleSample )
 {
+
+#pragma GCC diagnostic pop
 
   using namespace ::testing;
 
