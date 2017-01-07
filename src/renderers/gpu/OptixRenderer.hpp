@@ -2,9 +2,9 @@
 #define OptixRenderer_hpp
 
 
+#include "glm/glm.hpp"
 #include "optixu/optixpp_namespace.h"
 #include "RendererInterface.hpp"
-#include "glm/glm.hpp"
 
 
 namespace light

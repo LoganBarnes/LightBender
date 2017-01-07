@@ -4,7 +4,7 @@
 
 #include "OptixRenderer.hpp"
 #include <vector>
-#include <optixu/optixu_math_stream_namespace.h>
+#include <cstring>
 
 
 namespace light
@@ -52,8 +52,8 @@ public:
   /// \return
   ///////////////////////////////////////////////////////////////
   optix::Geometry createBoxPrimitive (
-                                      optix::float3 min = optix::make_float3( -1.0f ),
-                                      optix::float3 max = optix::make_float3(  1.0f )
+                                      optix::float3 min = optix::float3 { -1.0f, -1.0f, -1.0f },
+                                      optix::float3 max = optix::float3 {  1.0f,  1.0f,  1.0f }
                                       );
 
 
@@ -64,8 +64,8 @@ public:
   /// \return
   ///////////////////////////////////////////////////////////////
   optix::Geometry createSpherePrimitive (
-                                         optix::float3 center = optix::make_float3( 0.0f ),
-                                         float         radius = 1.0f
+                                         optix::float3 center = optix::float3 { 0.0f, 0.0f, 0.0f },
+                                         float radius = 1.0f
                                          );
 
 
@@ -77,12 +77,9 @@ public:
   /// \return
   ///////////////////////////////////////////////////////////////
   optix::Geometry createQuadPrimitive (
-                                       optix::float3 anchor =
-                                         optix::make_float3( -1.0f, -1.0f, 0.0f ),
-                                       optix::float3 v1     =
-                                         optix::make_float3(  2.0f,  0.0f, 0.0f ),
-                                       optix::float3 v2     =
-                                         optix::make_float3(  0.0f,  2.0f, 0.0f )
+                                       optix::float3 anchor = optix::float3 { -1.0f, -1.0f, 0.0f },
+                                       optix::float3 v1     = optix::float3 {  2.0f,  0.0f, 0.0f },
+                                       optix::float3 v2     = optix::float3 {  0.0f,  2.0f, 0.0f }
                                        );
 
 
@@ -115,10 +112,10 @@ public:
                       optix::Group group,
                       optix::GeometryGroup geomGroup,
                       unsigned childNum,
-                      optix::float3 translation   = optix::make_float3( 0.0f ),
-                      optix::float3 scale         = optix::make_float3( 1.0f ),
+                      optix::float3 translation   = optix::float3 { 0.0f, 0.0f, 0.0f },
+                      optix::float3 scale         = optix::float3 { 1.0f, 1.0f, 1.0f },
                       float rotationAngle         = 0.0f,
-                      optix::float3 rotationAxis  = optix::make_float3( 0.0f, 1.0f, 0.0f )
+                      optix::float3 rotationAxis  = optix::float3 { 0.0f, 1.0f, 0.0f }
                       );
 
 

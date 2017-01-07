@@ -1,11 +1,11 @@
 #include "OptixAdvancedScene.hpp"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
-#include "optixu/optixu_math_namespace.h"
+#include "optixMod/optix_math_stream_namespace_mod.h"
 #include "commonStructs.h"
 
 
-//#define BIG_AND_CLOSE
+#define BIG_AND_CLOSE
 
 
 namespace light

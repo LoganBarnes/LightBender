@@ -1,6 +1,7 @@
 #include "OptixRenderer.hpp"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
+#include "optixMod/optix_math_stream_namespace_mod.h"
 
 //#include <iostream>
 //#include "glm/gtx/string_cast.hpp"

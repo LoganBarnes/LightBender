@@ -1,5 +1,5 @@
 #include "OptixScene.hpp"
-#include <optixu/optixu_math_stream_namespace.h>
+#include "optixMod/optix_math_stream_namespace_mod.h"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
 #include "commonStructs.h"
