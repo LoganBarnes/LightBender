@@ -37,6 +37,9 @@ bool pathTrace = false;
 int cameraType  = 0;
 int sqrtSamples = 1;
 
+int maxBounces  = 5;
+int firstBounce = 0;
+
 }
 
 
@@ -293,6 +296,32 @@ LightBenderIOHandler::_onGuiRender( )
       upScene_->setCameraType ( cameraType );
 
     }
+
+    if ( pathTrace )
+    {
+
+      int oldBounces = maxBounces;
+      int oldBounce  = firstBounce;
+
+      ImGui::SliderInt( "Max Bounces ",   &maxBounces,  1, 10 );
+      ImGui::SliderInt( "First Bounces ", &firstBounce, 0,  9 );
+
+      if ( oldBounces != maxBounces )
+      {
+
+        upScene_->setMaxBounces( static_cast< unsigned >( maxBounces ) );
+
+      }
+
+      if ( oldBounce != firstBounce )
+      {
+
+        upScene_->setFirstBounce( static_cast< unsigned >( firstBounce ) );
+
+      }
+
+    }
+
 
     //
     // camera stuff

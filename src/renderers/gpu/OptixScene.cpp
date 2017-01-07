@@ -80,6 +80,38 @@ OptixScene::setDisplayType( int type )
 
 
 ///////////////////////////////////////////////////////////////
+/// \brief OptixScene::setMaxBounces
+/// \param bounces
+///////////////////////////////////////////////////////////////
+void
+OptixScene::setMaxBounces( unsigned bounces )
+{
+
+  context_[ "max_bounces" ]->setUint( bounces );
+
+  resetFrameCount( );
+
+}
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::setFirstBounce
+/// \param bounce
+///////////////////////////////////////////////////////////////
+void
+OptixScene::setFirstBounce( unsigned bounce )
+{
+
+  context_[ "first_bounce" ]->setUint( bounce );
+
+  resetFrameCount( );
+
+}
+
+
+
+///////////////////////////////////////////////////////////////
 /// \brief OptixScene::createBoxPrimitive
 /// \param min
 /// \param max

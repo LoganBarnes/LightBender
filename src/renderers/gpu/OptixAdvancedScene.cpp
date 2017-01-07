@@ -5,7 +5,7 @@
 #include "commonStructs.h"
 
 
-#define BIG_AND_CLOSE
+//#define BIG_AND_CLOSE
 
 
 namespace light
@@ -19,9 +19,9 @@ constexpr float lightRadius       = 0.1f;
 
 #else
 
-const optix::float3 lightLocation = optix::make_float3( 1.0f, 3.0f, -2.0f );
-const optix::float3 lightPower    = optix::make_float3( 1200.f );
-constexpr float lightRadius       = 0.75f;
+const optix::float3 lightLocation = optix::make_float3( 1.0f, 3.5f, -2.5f );
+const optix::float3 lightPower    = optix::make_float3( 2500.f );
+constexpr float lightRadius       = 0.7f;
 
 #endif
 
