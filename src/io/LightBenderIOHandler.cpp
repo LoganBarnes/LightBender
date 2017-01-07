@@ -2,6 +2,7 @@
 
 // system
 #include <vector>
+#include <algorithm>
 
 // shared
 #include "glad/glad.h"
@@ -101,8 +102,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                                         GL_STREAM_DRAW
                                         );
 
-
-      _setScene( );
+  _setScene( );
 
 
   //

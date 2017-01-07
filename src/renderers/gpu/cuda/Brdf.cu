@@ -30,9 +30,6 @@ createONB(
 
 
 
-const float simpleShadeConstant = 0.8f;
-
-
 rtDeclareVariable( float3,               shading_normal,   attribute shading_normal, );
 rtDeclareVariable( float3,               geometric_normal, attribute geometric_normal, );
 
@@ -78,6 +75,8 @@ RT_PROGRAM
 void
 closest_hit_simple_shading( )
 {
+
+  const float simpleShadeConstant = 0.8f;
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
