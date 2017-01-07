@@ -1,0 +1,174 @@
+newmtl Brown_Sand0
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand0.jpg
+newmtl Brown_Sand1
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand1_1.jpg
+newmtl Brown_Sand2
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand2_2.jpg
+newmtl Flat_gray
+Ka 0 0 0
+Ns 8.16617
+Ks 1 1 1
+Kd 0.501961 0.501961 0.501961
+map_Kd Flat_gray_3.jpg
+newmtl Brown_Sand3
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.59933 0.536691 0.399469
+map_Kd Brown_Sand3_4.jpg
+newmtl Brown_Sand4
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand4_5.jpg
+newmtl Metallic_Varnish
+Ka 0 0 0
+Ns 6.04965
+Ks 0.733333 0.92549 1
+Kd 0 0 0
+map_Kd Metallic_Varnish_6.jpg
+newmtl Brown_Sand5
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand5_7.jpg
+newmtl Brown_Sand6
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand6_8.jpg
+newmtl Brown_Sand7
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand7_9.jpg
+newmtl Brushed_bronze0
+Ka 0 0 0
+Ns 4.48169
+Ks 0.435294 1 0.243137
+Kd 0.87451 0.517647 0.156863
+map_Kd Brushed_bronze0_10.jpg
+newmtl Brushed_bronze1
+Ka 0 0 0
+Ns 4.48169
+Ks 0.435294 1 0.243137
+Kd 0.87451 0.517647 0.156863
+map_Kd Brushed_bronze1_11.jpg
+newmtl Brown_Sand8
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand8_12.jpg
+newmtl Brown_Sand9
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand9_13.jpg
+newmtl Brown_Sand10
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.160766 0.139009 0.0980577
+map_Kd Brown_Sand10_14.jpg
+newmtl Dark_smoked_gla0
+Ka 0 0 0
+Ns 34.4669
+Ks 1 1 1
+Kd 0.498039 0.498039 0.498039
+map_Kd Dark_smoked_gla0_15.jpg
+newmtl Dark_smoked_gla1
+Ka 0 0 0
+Ns 34.4669
+Ks 1 1 1
+Kd 0.498039 0.498039 0.498039
+map_Kd Dark_smoked_gla1_16.jpg
+newmtl Brown_Sand11
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand11_17.jpg
+newmtl Brown_Sand12
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand12_18.jpg
+newmtl Brown_Sand13
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand13_19.jpg
+newmtl Brown_Sand14
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand14_20.jpg
+newmtl Brown_Sand15
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand15_21.jpg
+newmtl Brown_Sand16
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand16_22.jpg
+newmtl Brown_Sand17
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand17_23.jpg
+newmtl Brown_Sand18
+Ka 0 0 0
+Ns 3.35721
+Ks 1 1 1
+Kd 0.292248 0.253268 0.182262
+map_Kd Brown_Sand18_24.jpg
+newmtl Stained_silver0
+Ka 0 0 0
+Ns 6.04965
+Ks 1 0.788235 0.635294
+Kd 0.702766 0.702766 0.702766
+map_Kd Stained_silver0_25.jpg
+newmtl Pottery_clay0
+Ka 0 0 0
+Ns 2.31637
+Ks 0.129412 0.129412 0.129412
+Kd 0.027451 0.027451 0.027451
+map_Kd Pottery_clay0_26.jpg
+newmtl Stained_silver1
+Ka 0 0 0
+Ns 6.04965
+Ks 1 0.788235 0.635294
+Kd 0.702766 0.702766 0.702766
+map_Kd Stained_silver1_27.jpg
+newmtl Pottery_clay1
+Ka 0 0 0
+Ns 2.31637
+Ks 0.129412 0.129412 0.129412
+Kd 0.027451 0.027451 0.027451
+map_Kd Pottery_clay1_28.jpg
