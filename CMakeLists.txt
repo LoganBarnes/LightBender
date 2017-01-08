@@ -24,6 +24,7 @@ set( SHARED_PATH ${PROJECT_SOURCE_DIR}/shared )
 set( RES_PATH    ${PROJECT_SOURCE_DIR}/res    )
 set( SHADER_PATH ${SHARED_PATH}/shaders       )
 
+set( MODEL_PATH  ${PROJECT_SOURCE_DIR}/run/models )
 set( INPUT_PATH  ${PROJECT_SOURCE_DIR}/run/input  )
 set( OUTPUT_PATH ${PROJECT_SOURCE_DIR}/run/output )
 
@@ -143,6 +144,7 @@ set(
     ${SRC_DIR}/renderers/gpu/OptixBasicScene.cpp
     ${SRC_DIR}/renderers/gpu/OptixAdvancedScene.cpp
     ${SRC_DIR}/renderers/gpu/OptixFileScene.cpp
+    ${SRC_DIR}/renderers/gpu/OptixModelScene.cpp
 
     ${SRC_DIR}/io/LightBenderIOHandler.cpp
     ${SRC_DIR}/io/LightBenderCallback.cpp

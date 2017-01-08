@@ -19,6 +19,7 @@
 #include "LightBenderConfig.hpp"
 #include "OptixBasicScene.hpp"
 #include "OptixAdvancedScene.hpp"
+#include "OptixModelScene.hpp"
 
 
 namespace light
@@ -102,7 +103,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                                         GL_STREAM_DRAW
                                         );
 
-  _setScene( );
+      _setScene( );
 
 
   //
@@ -277,7 +278,7 @@ LightBenderIOHandler::_onGuiRender( )
 
     int oldScene = currentScene_;
 
-    ImGui::Combo( "", &currentScene_, " Basic \0 Advanced \0\0" );
+    ImGui::Combo( "", &currentScene_, " Basic \0 Advanced \0 Model \0\0" );
 
     if ( oldScene != currentScene_ )
     {
@@ -440,6 +441,17 @@ LightBenderIOHandler::_setScene( )
                                                               upGLWrapper_->getBuffer(
                                                                                       "renderBuffer" )
                                                               ) );
+    break;
+
+
+  case 2:
+
+    upScene_
+      = std::unique_ptr< OptixScene >( new OptixModelScene(
+                                                           defaultWidth,
+                                                           defaultHeight,
+                                                           upGLWrapper_->getBuffer( "renderBuffer" )
+                                                           ) );
     break;
 
 

@@ -17,10 +17,9 @@ OptixScene::OptixScene(
                        int      height,
                        unsigned vbo
                        )
-  : OptixRenderer( width, height, vbo )
+  : OptixRenderer ( width, height, vbo )
   , sceneMaterial_( context_->createMaterial( ) )
 {
-
 
   // Materials
   std::string brdfPtxFile(

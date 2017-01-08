@@ -1,36 +1,22 @@
-#include "OptixAdvancedScene.hpp"
+#include "OptixModelScene.hpp"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
 #include "optixMod/optix_math_stream_namespace_mod.h"
 #include "commonStructs.h"
-//#include "optixUtil/OptixMesh"
-
-
-#define BIG_AND_CLOSE
 
 
 namespace light
 {
 
-#ifndef BIG_AND_CLOSE
-
 const optix::float3 lightLocation = optix::make_float3( 2.0f, 6.0f, 4.0f );
 const optix::float3 lightPower    = optix::make_float3( 120.f );
 constexpr float lightRadius       = 0.1f;
 
-#else
-
-const optix::float3 lightLocation = optix::make_float3( 1.0f, 4.0f, -3.0f );
-const optix::float3 lightPower    = optix::make_float3( 2500.f );
-constexpr float lightRadius       = 0.7f;
-
-#endif
-
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixAdvancedScene::OptixAdvancedScene
+/// \brief OptixModelScene::OptixModelScene
 ///////////////////////////////////////////////////////////////
-OptixAdvancedScene::OptixAdvancedScene(
+OptixModelScene::OptixModelScene(
                                        int      width,
                                        int      height,
                                        unsigned vbo
@@ -49,18 +35,18 @@ OptixAdvancedScene::OptixAdvancedScene(
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixAdvancedScene::~OptixAdvancedScene
+/// \brief OptixModelScene::~OptixModelScene
 ///////////////////////////////////////////////////////////////
-OptixAdvancedScene::~OptixAdvancedScene( )
+OptixModelScene::~OptixModelScene( )
 {}
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixAdvancedScene::_buildScene
+/// \brief OptixModelScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixAdvancedScene::_buildGeometry( )
+OptixModelScene::_buildGeometry( )
 {
 
   optix::Material lightMaterial = context_->createMaterial( );
@@ -84,13 +70,7 @@ OptixAdvancedScene::_buildGeometry( )
 
   // top group everything will get attached to
   optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount(
-      #ifdef BIG_AND_CLOSE
-        7
-      #else
-        6
-      #endif
-        );
+  topGroup->setChildCount( 6 );
 
   // attach materials to geometries
   optix::GeometryGroup quadGroup = createGeomGroup(
@@ -157,31 +137,20 @@ OptixAdvancedScene::_buildGeometry( )
                 );
 
 
-#ifdef BIG_AND_CLOSE
-
-  // light
-  attachToGroup(
-                topGroup, lightSphereGroup, 6,
-                optix::make_float3( -1.5f, 1.0f, 4.0f ),
-                optix::make_float3( 0.75f )
-                );
-#endif
-
-
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
   context_[ "top_object"   ]->set( topGroup );
   context_[ "top_shadower" ]->set( topGroup );
 
-} // OptixAdvancedScene::_buildScene
+} // OptixModelScene::_buildScene
 
 
 
 ///////////////////////////////////////////////////////////////
-/// \brief OptixAdvancedScene::_addLights
+/// \brief OptixModelScene::_addLights
 ///////////////////////////////////////////////////////////////
 void
-OptixAdvancedScene::_addLights( )
+OptixModelScene::_addLights( )
 {
 
   std::vector< Light > lights =
@@ -194,16 +163,6 @@ OptixAdvancedScene::_addLights( )
                 lightRadius
                 )
 
-  #ifdef BIG_AND_CLOSE
-
-    , createLight(
-                  optix::float3 { -1.5f, 1.0f, 4.0f },
-                  optix::float3 { 500.0f, 500.0f, 500.0f },
-                  LightShape::SPHERE,
-                  0.75f
-                  )
-  #endif
-
   };
 
   float area = M_PIf * 4.0f * lightRadius * lightRadius;
@@ -215,7 +174,7 @@ OptixAdvancedScene::_addLights( )
 
   context_[ "lights" ]->set( createInputBuffer( lights ) );
 
-} // OptixAdvancedScene::_addLights
+} // OptixModelScene::_addLights
 
 
 
