@@ -5,7 +5,7 @@
 #include "OptixRenderer.hpp"
 #include <vector>
 #include <cstring>
-#include <optixu/optixu_math_stream_namespace.h>
+#include "optixMod/optix_math_stream_namespace_mod.h"
 
 
 namespace light
