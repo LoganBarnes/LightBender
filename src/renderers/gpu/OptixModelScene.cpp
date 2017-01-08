@@ -3,6 +3,7 @@
 #include "graphics/Camera.hpp"
 #include "optixMod/optix_math_stream_namespace_mod.h"
 #include "commonStructs.h"
+#include "OptiXMesh.h"
 
 
 namespace light
@@ -17,14 +18,15 @@ constexpr float lightRadius       = 0.1f;
 /// \brief OptixModelScene::OptixModelScene
 ///////////////////////////////////////////////////////////////
 OptixModelScene::OptixModelScene(
-                                       int      width,
-                                       int      height,
-                                       unsigned vbo
-                                       )
+                                 int               width,
+                                 int               height,
+                                 unsigned          vbo,
+                                 const std::string &filename
+                                 )
   : OptixScene( width, height, vbo )
 {
 
-  _buildGeometry( );
+  _buildGeometry( filename );
   _addLights( );
 
   context_->validate( );
@@ -46,7 +48,7 @@ OptixModelScene::~OptixModelScene( )
 /// \brief OptixModelScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixModelScene::_buildGeometry( )
+OptixModelScene::_buildGeometry( const std::string &filename )
 {
 
   optix::Material lightMaterial = context_->createMaterial( );
@@ -64,36 +66,24 @@ OptixModelScene::_buildGeometry( )
 
 
   // Create primitives used in the scene
-  optix::Geometry quadPrim   = createQuadPrimitive( );
-  optix::Geometry boxPrim    = createBoxPrimitive( );
   optix::Geometry spherePrim = createSpherePrimitive( );
 
   // top group everything will get attached to
   optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount( 6 );
+  topGroup->setChildCount( 2 );
 
-  // attach materials to geometries
-  optix::GeometryGroup quadGroup = createGeomGroup(
-                                                   { quadPrim },
-                                                   { sceneMaterial_ },
-                                                   "NoAccel",
-                                                   "NoAccel"
-                                                   );
+  // mesh geom group
+  OptiXMesh mesh;
 
-  optix::GeometryGroup boxGroup = createGeomGroup(
-                                                  { boxPrim },
-                                                  { sceneMaterial_ },
-                                                  "NoAccel",
-                                                  "NoAccel"
-                                                  );
+  mesh.context = context_;
+  loadMesh( filename, mesh );
 
-  optix::GeometryGroup sphereGroup = createGeomGroup(
-                                                     { spherePrim },
-                                                     { sceneMaterial_ },
-                                                     "NoAccel",
-                                                     "NoAccel"
-                                                     );
+  optix::GeometryGroup meshGroup = context_->createGeometryGroup( );
+  meshGroup->addChild( mesh.geom_instance );
+  meshGroup->setAcceleration( context_->createAcceleration( "Trbvh" ) );
 
+
+  // lights
   optix::GeometryGroup lightSphereGroup = createGeomGroup(
                                                           { spherePrim },
                                                           { lightMaterial },
@@ -101,37 +91,17 @@ OptixModelScene::_buildGeometry( )
                                                           "NoAccel"
                                                           );
 
-
   // ground quad
   attachToGroup(
                 topGroup,
-                quadGroup,
+                meshGroup,
                 0,
-                optix::make_float3( 0.0f ),
-                optix::make_float3( 5.0f, 5.0f, 1.0f ),
-                M_PIf * 0.5f,
-                optix::make_float3( 1.0f, 0.0f, 0.0f )
-                );
-
-  // stack of two boxes
-  attachToGroup( topGroup, boxGroup, 1, optix::make_float3( -2.0f, 1.0f, -1.0f ) );
-  attachToGroup(
-                topGroup, boxGroup, 2,
-                optix::make_float3(    -2.0f, 2.5f, -1.0f ),
-                optix::make_float3( 0.5f )
-                );
-
-  // two spheres
-  attachToGroup( topGroup, sphereGroup, 3, optix::make_float3( 1.5f, 1.0f, 0.0f ) );
-  attachToGroup(
-                topGroup, sphereGroup, 4,
-                optix::make_float3( 2.5f, 0.5f, 1.0f ),
-                optix::make_float3( 0.5f )
+                optix::make_float3( 0.0f, 0.0f, 5.0f )
                 );
 
   // light
   attachToGroup(
-                topGroup, lightSphereGroup, 5,
+                topGroup, lightSphereGroup, 1,
                 lightLocation,
                 optix::make_float3( lightRadius )
                 );

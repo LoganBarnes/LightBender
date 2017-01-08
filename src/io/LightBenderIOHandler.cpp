@@ -417,6 +417,10 @@ LightBenderIOHandler::_setScene( )
 
   }
 
+
+  std::string modelFile = light::MODEL_PATH + "x-wing/x-wing.obj";
+
+
   switch ( currentScene_ )
   {
 
@@ -450,7 +454,8 @@ LightBenderIOHandler::_setScene( )
       = std::unique_ptr< OptixScene >( new OptixModelScene(
                                                            defaultWidth,
                                                            defaultHeight,
-                                                           upGLWrapper_->getBuffer( "renderBuffer" )
+                                                           upGLWrapper_->getBuffer( "renderBuffer" ),
+                                                           modelFile
                                                            ) );
     break;
 

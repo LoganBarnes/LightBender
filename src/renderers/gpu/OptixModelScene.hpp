@@ -23,10 +23,11 @@ public:
   /// \brief OptixModelScene
   ///////////////////////////////////////////////////////////////
   OptixModelScene(
-                     int      width,
-                     int      height,
-                     unsigned vbo
-                     );
+                  int               width,
+                  int               height,
+                  unsigned          vbo,
+                  const std::string &filename
+                  );
 
 
   ///////////////////////////////////////////////////////////////
@@ -40,7 +41,7 @@ protected:
 
 private:
 
-  void _buildGeometry ( );
+  void _buildGeometry ( const std::string &filename );
   void _addLights ( );
 
 
