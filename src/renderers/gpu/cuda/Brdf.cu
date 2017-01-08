@@ -251,6 +251,8 @@ closest_hit_bsdf( )
     prd_current.attenuation *= albedo;  // use the albedo as the diffuse response
     prd_current.countEmitted = false;
 
+    prd_current.attenuation = clamp( prd_current.attenuation, 0.0f, 1.0f );
+
   }
 
   // loop vars
