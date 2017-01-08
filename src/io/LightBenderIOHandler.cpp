@@ -103,7 +103,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                                         GL_STREAM_DRAW
                                         );
 
-      _setScene( );
+  _setScene( );
 
 
   //
@@ -126,6 +126,13 @@ LightBenderIOHandler::~LightBenderIOHandler( )
 
 
 
+/////////////////////////////////////////////
+/// \brief LightBenderIOHandler::rotateCamera
+/// \param deltaX
+/// \param deltaY
+///
+/// \author Logan Barnes
+/////////////////////////////////////////////
 void
 LightBenderIOHandler::rotateCamera(
                                    double deltaX,
@@ -140,7 +147,12 @@ LightBenderIOHandler::rotateCamera(
 }
 
 
-
+/////////////////////////////////////////////
+/// \brief LightBenderIOHandler::zoomCamera
+/// \param deltaZ
+///
+/// \author Logan Barnes
+/////////////////////////////////////////////
 void
 LightBenderIOHandler::zoomCamera( double deltaZ )
 {
@@ -152,7 +164,13 @@ LightBenderIOHandler::zoomCamera( double deltaZ )
 }
 
 
-
+/////////////////////////////////////////////
+/// \brief LightBenderIOHandler::resize
+/// \param w
+/// \param h
+///
+/// \author Logan Barnes
+/////////////////////////////////////////////
 void
 LightBenderIOHandler::resize(
                              int w,
@@ -249,6 +267,11 @@ LightBenderIOHandler::_onRender( const double )
 
 
 
+/////////////////////////////////////////////
+/// \brief LightBenderIOHandler::_onGuiRender
+///
+/// \author Logan Barnes
+/////////////////////////////////////////////
 void
 LightBenderIOHandler::_onGuiRender( )
 {
@@ -403,9 +426,11 @@ LightBenderIOHandler::_onGuiRender( )
 
 
 
-///
+/////////////////////////////////////////////
 /// \brief LightBenderIOHandler::_setScene
 ///
+/// \author Logan Barnes
+/////////////////////////////////////////////
 void
 LightBenderIOHandler::_setScene( )
 {
@@ -442,8 +467,7 @@ LightBenderIOHandler::_setScene( )
       = std::unique_ptr< OptixScene >( new OptixAdvancedScene(
                                                               defaultWidth,
                                                               defaultHeight,
-                                                              upGLWrapper_->getBuffer(
-                                                                                      "renderBuffer" )
+                                                              upGLWrapper_->getBuffer( "renderBuffer" )
                                                               ) );
     break;
 
@@ -471,6 +495,8 @@ LightBenderIOHandler::_setScene( )
   upScene_->setDisplayType( displayType );
   upScene_->setPathTracing( pathTrace );
   upScene_->setCameraType ( cameraType );
+  upScene_->setMaxBounces ( maxBounces );
+  upScene_->setFirstBounce( firstBounce );
 
 } // LightBenderIOHandler::_setScene
 
