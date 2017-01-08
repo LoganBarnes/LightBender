@@ -121,7 +121,7 @@ OptixBasicScene::_buildGeometry( )
 
   // top group everything will get attached to
   optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount( shapes_.size( ) );
+  topGroup->setChildCount( static_cast< unsigned >( shapes_.size( ) ) );
 
   for ( unsigned i = 0; i < shapes_.size( ); ++i )
   {
