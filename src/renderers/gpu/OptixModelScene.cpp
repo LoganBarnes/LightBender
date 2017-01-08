@@ -4,6 +4,7 @@
 #include "optixMod/optix_math_stream_namespace_mod.h"
 #include "commonStructs.h"
 #include "OptiXMesh.h"
+#include "imgui.h"
 
 
 namespace light
@@ -146,6 +147,24 @@ OptixModelScene::_addLights( )
 
 } // OptixModelScene::_addLights
 
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixModelScene::renderSceneGui
+///////////////////////////////////////////////////////////////
+void
+OptixModelScene::renderSceneGui()
+{
+
+  if ( ImGui::CollapsingHeader( "Model Scene", "modelScene", false, true ) )
+  {
+
+    ImGui::Text( "Blah" );
+
+  }
+
+}
 
 
 } // namespace light

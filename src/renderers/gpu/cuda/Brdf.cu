@@ -208,8 +208,8 @@ closest_hit_simple_shading( )
 
 
 
-//rtDeclareVariable( float3, albedo,    , );
-//rtDeclareVariable( float,  roughness, , );
+rtDeclareVariable( float3, albedo,    , );
+rtDeclareVariable( float,  roughness, , );
 
 /////////////////////////////////////////////////////////
 /// \brief closest_hit_bsdf
@@ -220,8 +220,8 @@ closest_hit_bsdf( )
 {
 
 //  float3 albedo   = make_float3( 0.13f ); // moon
-  float3 albedo   = make_float3( 0.71f, 0.62f, 0.53f ); // clay
-  float roughness = 0.3f;
+  // float3 albedo   = make_float3( 0.71f, 0.62f, 0.53f ); // clay
+  // float roughness = 0.3f;
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );

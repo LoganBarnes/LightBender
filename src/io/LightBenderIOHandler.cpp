@@ -147,6 +147,7 @@ LightBenderIOHandler::rotateCamera(
 }
 
 
+
 /////////////////////////////////////////////
 /// \brief LightBenderIOHandler::zoomCamera
 /// \param deltaZ
@@ -162,6 +163,7 @@ LightBenderIOHandler::zoomCamera( double deltaZ )
   upScene_->resetFrameCount( );
 
 }
+
 
 
 /////////////////////////////////////////////
@@ -299,17 +301,6 @@ LightBenderIOHandler::_onGuiRender( )
   if ( ImGui::CollapsingHeader( "Scene", "scene", false, true ) )
   {
 
-    int oldScene = currentScene_;
-
-    ImGui::Combo( "", &currentScene_, " Basic \0 Advanced \0 Model \0\0" );
-
-    if ( oldScene != currentScene_ )
-    {
-
-      _setScene( );
-
-    }
-
     bool oldPathTrace = pathTrace;
     ImGui::Checkbox( "Pathtrace", &pathTrace );
 
@@ -325,7 +316,7 @@ LightBenderIOHandler::_onGuiRender( )
     {
 
       int oldBounces = maxBounces;
-      ImGui::SliderInt( "Max Bounces ",   &maxBounces, 0, 10 );
+      ImGui::SliderInt( "Max Bounces ", &maxBounces, 0, 10 );
       maxBounces = std::max( firstBounce, maxBounces );
 
       if ( oldBounces != maxBounces )
@@ -382,10 +373,8 @@ LightBenderIOHandler::_onGuiRender( )
   // Display type
   //
   ImGui::Separator( );
-  ImGui::Text( "Display" );
 
   int oldDisplay = displayType;
-
   ImGui::Combo( "Display", &displayType, " Normals \0 Simple Shading \0 BSDF \0\0" );
 
   if ( oldDisplay != displayType )
@@ -395,14 +384,20 @@ LightBenderIOHandler::_onGuiRender( )
 
   }
 
+  ImGui::Separator( );
+  ImGui::Text( "Type" );
 
-//  //
-//  // Light settings
-//  //
-//  ImGui::Separator( );
-//  ImGui::Text( "Lights" );
+  int oldScene = currentScene_;
+  ImGui::Combo( "", &currentScene_, " Basic \0 Advanced \0 Model \0\0" );
 
-//  ImGui::SliderFloat( "Radius: ", upScene_->lightRadius_, 0.05, 1.0 );
+  if ( oldScene != currentScene_ )
+  {
+
+    _setScene( );
+
+  }
+
+  upScene_->renderSceneGui( );
 
 
   //
@@ -467,7 +462,8 @@ LightBenderIOHandler::_setScene( )
       = std::unique_ptr< OptixScene >( new OptixAdvancedScene(
                                                               defaultWidth,
                                                               defaultHeight,
-                                                              upGLWrapper_->getBuffer( "renderBuffer" )
+                                                              upGLWrapper_->getBuffer(
+                                                                                      "renderBuffer" )
                                                               ) );
     break;
 

@@ -3,7 +3,7 @@
 #include "graphics/Camera.hpp"
 #include "optixMod/optix_math_stream_namespace_mod.h"
 #include "commonStructs.h"
-//#include "optixUtil/OptixMesh"
+#include "imgui.h"
 
 
 #define BIG_AND_CLOSE
@@ -217,6 +217,25 @@ OptixAdvancedScene::_addLights( )
 
 } // OptixAdvancedScene::_addLights
 
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixAdvancedScene::renderSceneGui
+///
+///        Allows for specific manipulation of each scene
+///////////////////////////////////////////////////////////////
+void
+OptixAdvancedScene::renderSceneGui()
+{
+
+  if ( ImGui::CollapsingHeader( "Advanced Scene", "modelScene", false, true ) )
+  {
+
+    ImGui::Text( "Blah" );
+
+  }
+
+}
 
 
 } // namespace light

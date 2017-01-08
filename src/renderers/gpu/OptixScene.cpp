@@ -9,6 +9,7 @@ namespace light
 {
 
 
+
 ///////////////////////////////////////////////////////////////
 /// \brief OptixScene::OptixScene
 ///////////////////////////////////////////////////////////////
@@ -21,34 +22,53 @@ OptixScene::OptixScene(
   , sceneMaterial_( context_->createMaterial( ) )
 {
 
-  // Materials
+  //
+  // Various ways to display objects
+  //
   std::string brdfPtxFile(
                           light::RES_PATH
                           + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
                           );
 
-  displayPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                 brdfPtxFile,
-                                                                 "closest_hit_normals"
-                                                                 ) );
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "closest_hit_normals"
+                                                                  ) );
 
-  displayPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                 brdfPtxFile,
-                                                                 "closest_hit_simple_shading"
-                                                                 ) );
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "closest_hit_simple_shading"
+                                                                  ) );
 
-  displayPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                 brdfPtxFile,
-                                                                 "closest_hit_bsdf"
-                                                                 ) );
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "closest_hit_bsdf"
+                                                                  ) );
 
-  sceneMaterial_->setClosestHitProgram( 0, displayPrograms_.back( ) );
+  sceneMaterial_->setClosestHitProgram( 0, materialPrograms_.back( ) );
 
+
+  //
+  // for lights
+  //
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "closest_hit_emission"
+                                                                  ) );
+
+
+  //
   // for shadowing
-  sceneMaterial_->setAnyHitProgram( 1, context_->createProgramFromPTXFile(
-                                                                          brdfPtxFile,
-                                                                          "any_hit_occlusion"
-                                                                          ) );
+  //
+  materialPrograms_.push_back( context_->createProgramFromPTXFile(
+                                                                  brdfPtxFile,
+                                                                  "any_hit_occlusion"
+                                                                  ) );
+
+  sceneMaterial_->setAnyHitProgram( 1, materialPrograms_.back( ) );
+
+  sceneMaterial_[ "albedo"    ]->setFloat( 0.71f, 0.62f, 0.53f );
+  sceneMaterial_[ "roughness" ]->setFloat( 0.3f );
 
 
   // defaults
@@ -78,11 +98,27 @@ void
 OptixScene::setDisplayType( int type )
 {
 
-  sceneMaterial_->setClosestHitProgram( 0, displayPrograms_[ static_cast< size_t >( type ) ] );
+  optix::Program currentProgram = materialPrograms_[ static_cast< size_t >( type ) ];
+
+  sceneMaterial_->setClosestHitProgram( 0, currentProgram );
+
+  for ( unsigned i = 0; i + 1 < shapes_.size( ); ++i )
+  {
+
+    ShapeGroup &s = shapes_[ i ];
+
+    for ( optix::Material &mat : s.materials )
+    {
+
+      mat->setClosestHitProgram( 0, currentProgram );
+
+    }
+
+  }
 
   resetFrameCount( );
 
-}
+} // OptixScene::setDisplayType
 
 
 
@@ -225,6 +261,36 @@ OptixScene::createQuadPrimitive(
 
 
 ///////////////////////////////////////////////////////////////
+/// \brief OptixScene::createMaterial
+/// \param closestHitProgram
+/// \param anyHitProgram
+/// \return
+///////////////////////////////////////////////////////////////
+optix::Material
+OptixScene::createMaterial(
+                           optix::Program closestHitProgram,
+                           optix::Program anyHitProgram
+                           )
+{
+
+  optix::Material material = context_->createMaterial( );
+
+  material->setClosestHitProgram( 0, closestHitProgram );
+
+  if ( anyHitProgram )
+  {
+
+    material->setAnyHitProgram ( 1, anyHitProgram );
+
+  }
+
+  return material;
+
+}
+
+
+
+///////////////////////////////////////////////////////////////
 /// \brief OptixScene::createGeomGroup
 /// \param geometries
 /// \param materials
@@ -280,6 +346,25 @@ OptixScene::createGeomGroup(
 
 
 ///////////////////////////////////////////////////////////////
+/// \brief OptixScene::createShapeGeomGroup
+/// \param pShape
+///////////////////////////////////////////////////////////////
+void
+OptixScene::createShapeGeomGroup( ShapeGroup *pShape )
+{
+
+  pShape->group = createGeomGroup(
+                                  pShape->geometries,
+                                  pShape->materials,
+                                  pShape->builderAccel,
+                                  pShape->traverserAccel
+                                  );
+
+}
+
+
+
+///////////////////////////////////////////////////////////////
 /// \brief OptixScene::attachToGroup
 /// \param group
 /// \param geomGroup
@@ -316,38 +401,75 @@ OptixScene::attachToGroup(
 
 
 
-// ///////////////////////////////////////////////////////////////
-// /// \brief OptixScene::_addLights
-// ///////////////////////////////////////////////////////////////
-// void
-// OptixScene::_addLights( )
-// {
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::attachToGroup
+/// \param group
+/// \param geomGroup
+/// \param childNum
+/// \param M
+///////////////////////////////////////////////////////////////
+void
+OptixScene::attachToGroup(
+                          optix::Group         group,
+                          optix::GeometryGroup geomGroup,
+                          unsigned             childNum,
+                          optix::Matrix4x4     M
+                          )
+{
 
-//   std::vector< BasicLight > lights = {
-//     { optix::make_float3(  10.0f, 30.0f, 20.0f ),
-//       optix::make_float3( 500.0f, 500.0f, 500.0f ),
-//       1, 0 },
+  optix::Transform trans = context_->createTransform( );
+  trans->setChild( geomGroup );
+  group->setChild( childNum, trans );
 
-//     { optix::make_float3( -10.0f, 20.0f, 15.0f ),
-//       optix::make_float3( 300.0f, 300.0f, 300.0f ),
-//       1, 0 },
+  trans->setMatrix( false, M.getData( ), 0 );
 
-//     { optix::make_float3( 0.0f, -10.0f, -25.0f ),
-//       optix::make_float3( 100.0f, 100.0f, 100.0f ),
-//       1, 0 }
-//   };
+}
 
-//   optix::Buffer lightBuffer = context_->createBuffer( RT_BUFFER_INPUT );
 
-//   lightBuffer->setFormat( RT_FORMAT_USER );
-//   lightBuffer->setElementSize( sizeof( lights[ 0 ] ) );
-//   lightBuffer->setSize( lights.size( ) );
-//   memcpy( lightBuffer->map( ), lights.data( ), lights.size( ) * sizeof( lights[ 0 ] ) );
-//   lightBuffer->unmap( );
 
-//   context_[ "lights" ]->set( lightBuffer );
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::createShapeGroup
+/// \param geometries
+/// \param materials
+/// \param builderAccel
+/// \param traverserAccel
+/// \param translation
+/// \param scale
+/// \param rotationAngle
+/// \param rotationAxis
+/// \return
+///////////////////////////////////////////////////////////////
+ShapeGroup
+OptixScene::createShapeGroup(
+                             const std::vector< optix::Geometry > &geometries,
+                             const std::vector< optix::Material > &materials,
+                             const std::string                    &builderAccel,
+                             const std::string                    &traverserAccel,
+                             optix::float3                         translation,
+                             optix::float3                         scale,
+                             float                                 rotationAngle,
+                             optix::float3                         rotationAxis
+                             )
+{
 
-// } // OptixScene::_addLights
+  ShapeGroup shape;
+
+  shape.geometries     = geometries;
+  shape.materials      = materials;
+  shape.builderAccel   = builderAccel;
+  shape.traverserAccel = traverserAccel;
+
+  optix::Matrix4x4 T = optix::Matrix4x4::translate( translation );
+  optix::Matrix4x4 S = optix::Matrix4x4::scale( scale );
+  optix::Matrix4x4 R = optix::Matrix4x4::rotate( rotationAngle, rotationAxis );
+
+  shape.transform = T * R * S;
+
+  createShapeGeomGroup( &shape );
+
+  return shape;
+
+} // OptixScene::createShapeGroup
 
 
 

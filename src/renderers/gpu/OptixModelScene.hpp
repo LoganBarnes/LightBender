@@ -37,6 +37,15 @@ public:
   ~OptixModelScene( );
 
 
+  ///////////////////////////////////////////////////////////////
+  /// \brief renderSceneGui
+  ///
+  ///        Allows for specific manipulation of each scene
+  ///////////////////////////////////////////////////////////////
+  virtual
+  void renderSceneGui( );
+
+
 protected:
 
 private:

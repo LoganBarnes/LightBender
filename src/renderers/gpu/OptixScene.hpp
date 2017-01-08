@@ -5,10 +5,36 @@
 #include "OptixRenderer.hpp"
 #include <vector>
 #include <cstring>
+#include <optixu/optixu_math_stream_namespace.h>
 
 
 namespace light
 {
+
+
+struct ShapeGroup
+{
+
+  optix::GeometryGroup group;
+  std::vector< optix::Geometry > geometries;
+  std::vector< optix::Material > materials;
+
+  optix::Matrix4x4 transform
+  {
+    optix::Matrix4x4::identity( )
+  };
+
+  std::string builderAccel
+  {
+    "NoAccel"
+  };
+
+  std::string traverserAccel
+  {
+    "NoAccel"
+  };
+
+};
 
 
 /////////////////////////////////////////////
@@ -49,14 +75,14 @@ public:
   /// \brief setMaxBounces
   /// \param bounces
   ///////////////////////////////////////////////////////////////
-  void setMaxBounces( unsigned bounces );
+  void setMaxBounces ( unsigned bounces );
 
 
   ///////////////////////////////////////////////////////////////
   /// \brief setFirstBounce
   /// \param bounce
   ///////////////////////////////////////////////////////////////
-  void setFirstBounce( unsigned bounce );
+  void setFirstBounce ( unsigned bounce );
 
 
   ///////////////////////////////////////////////////////////////
@@ -98,6 +124,18 @@ public:
 
 
   ///////////////////////////////////////////////////////////////
+  /// \brief createMaterial
+  /// \param closestHitProgram
+  /// \param anyHitProgram
+  /// \return
+  ///////////////////////////////////////////////////////////////
+  optix::Material createMaterial (
+                                  optix::Program closestHitProgram,
+                                  optix::Program anyHitProgram
+                                  );
+
+
+  ///////////////////////////////////////////////////////////////
   /// \brief createGeomGroup
   /// \param geometries
   /// \param materials
@@ -111,6 +149,13 @@ public:
                                         const std::string                    &builderAccel,
                                         const std::string                    &traverserAccel
                                         );
+
+
+  ///////////////////////////////////////////////////////////////
+  /// \brief createShapeGeomGroup
+  /// \param pShape
+  ///////////////////////////////////////////////////////////////
+  void createShapeGeomGroup ( ShapeGroup *pShape );
 
 
   ///////////////////////////////////////////////////////////////
@@ -133,6 +178,47 @@ public:
                       );
 
 
+
+  ///////////////////////////////////////////////////////////////
+  /// \brief attachToGroup
+  /// \param group
+  /// \param geomGroup
+  /// \param childNum
+  /// \param M
+  ///////////////////////////////////////////////////////////////
+  void attachToGroup (
+                      optix::Group         group,
+                      optix::GeometryGroup geomGroup,
+                      unsigned             childNum,
+                      optix::Matrix4x4     M
+                      );
+
+
+
+  ///////////////////////////////////////////////////////////////
+  /// \brief OptixScene::createShapeGroup
+  /// \param geometries
+  /// \param materials
+  /// \param builderAccel
+  /// \param traverserAccel
+  /// \param translation
+  /// \param scale
+  /// \param rotationAngle
+  /// \param rotationAxis
+  /// \return
+  ///////////////////////////////////////////////////////////////
+  ShapeGroup createShapeGroup (
+                               const std::vector< optix::Geometry > &geometries,
+                               const std::vector< optix::Material > &materials,
+                               const std::string &builderAccel   = "NoAccel",
+                               const std::string &traverserAccel = "NoAccel",
+                               optix::float3 translation   = optix::float3 { 0.0f, 0.0f, 0.0f },
+                               optix::float3 scale         = optix::float3 { 1.0f, 1.0f, 1.0f },
+                               float rotationAngle         = 0.0f,
+                               optix::float3 rotationAxis  = optix::float3 { 0.0f, 1.0f, 0.0f }
+                               );
+
+
   ///////////////////////////////////////////////////////////////
   /// \brief createInputBuffer
   /// \param input
@@ -142,11 +228,22 @@ public:
   optix::Buffer createInputBuffer ( const std::vector< T > &input );
 
 
+  ///////////////////////////////////////////////////////////////
+  /// \brief renderSceneGui
+  ///
+  ///        Allows for specific manipulation of each scene
+  ///////////////////////////////////////////////////////////////
+  virtual
+  void renderSceneGui( ) = 0;
+
+
 protected:
 
   optix::Material sceneMaterial_;
 
-  std::vector< optix::Program > displayPrograms_;
+  std::vector< optix::Program > materialPrograms_;
+
+  std::vector< ShapeGroup > shapes_;
 
 
 private:
