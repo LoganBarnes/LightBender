@@ -80,7 +80,7 @@ OptixModelScene::_buildGeometry( const std::string &filename )
 
   optix::GeometryGroup meshGroup = context_->createGeometryGroup( );
   meshGroup->addChild( mesh.geom_instance );
-  meshGroup->setAcceleration( context_->createAcceleration( "Trbvh" ) );
+  meshGroup->setAcceleration( context_->createAcceleration( "Trbvh", "Bvh" ) );
 
 
   // lights
