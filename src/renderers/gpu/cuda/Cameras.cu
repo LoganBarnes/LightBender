@@ -170,7 +170,7 @@ pathtrace_pinhole_camera( )
 
       }
 
-      if ( prd.depth > max_bounces )
+      if ( prd.depth >= max_bounces )
       {
 
         prd.result += prd.radiance * attenuation;

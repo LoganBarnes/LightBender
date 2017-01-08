@@ -10,7 +10,7 @@
 namespace light
 {
 
-const optix::float3 lightLocation = optix::make_float3( 2.0f, 6.0f, 4.0f );
+const optix::float3 lightLocation = optix::make_float3( 4.0f, 6.5f, 4.0f );
 const optix::float3 lightPower    = optix::make_float3( 120.f );
 constexpr float lightRadius       = 0.1f;
 
@@ -67,11 +67,12 @@ OptixModelScene::_buildGeometry( const std::string &filename )
 
 
   // Create primitives used in the scene
+  optix::Geometry quadPrim   = createQuadPrimitive( );
   optix::Geometry spherePrim = createSpherePrimitive( );
 
   // top group everything will get attached to
   optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount( 2 );
+  topGroup->setChildCount( 3 );
 
   // mesh geom group
   OptiXMesh mesh;
@@ -84,6 +85,13 @@ OptixModelScene::_buildGeometry( const std::string &filename )
   meshGroup->setAcceleration( context_->createAcceleration( "Trbvh", "Bvh" ) );
 
 
+  optix::GeometryGroup quadGroup = createGeomGroup(
+                                                   { quadPrim },
+                                                   { sceneMaterial_ },
+                                                   "NoAccel",
+                                                   "NoAccel"
+                                                   );
+
   // lights
   optix::GeometryGroup lightSphereGroup = createGeomGroup(
                                                           { spherePrim },
@@ -95,14 +103,25 @@ OptixModelScene::_buildGeometry( const std::string &filename )
   // ground quad
   attachToGroup(
                 topGroup,
-                meshGroup,
+                quadGroup,
                 0,
+                optix::make_float3( 0.0f, -0.0f, 0.0f ),
+                optix::make_float3( 8.0f, 8.0f, 1.0f ),
+                M_PIf * 0.5f,
+                optix::make_float3( 1.0f, 0.0f, 0.0f )
+                );
+
+  // model
+  attachToGroup(
+                topGroup,
+                meshGroup,
+                1,
                 optix::make_float3( 0.0f, 0.0f, 5.0f )
                 );
 
   // light
   attachToGroup(
-                topGroup, lightSphereGroup, 1,
+                topGroup, lightSphereGroup, 2,
                 lightLocation,
                 optix::make_float3( lightRadius )
                 );
