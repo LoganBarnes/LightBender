@@ -495,8 +495,8 @@ LightBenderIOHandler::_setScene( )
   upScene_->setDisplayType( displayType );
   upScene_->setPathTracing( pathTrace );
   upScene_->setCameraType ( cameraType );
-  upScene_->setMaxBounces ( maxBounces );
-  upScene_->setFirstBounce( firstBounce );
+  upScene_->setMaxBounces ( static_cast< unsigned >( maxBounces ) );
+  upScene_->setFirstBounce( static_cast< unsigned >( firstBounce ) );
 
 } // LightBenderIOHandler::_setScene
 
