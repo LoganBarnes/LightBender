@@ -71,7 +71,7 @@ Manually via CMake (platform independent)
 cd run
 mkdir _build
 cd _build
-cmake ../..
+cmake -DCMAKE_GENERATOR_PLATFORM=x64 ../..
 cmake --build . --config Release
 ```
 
