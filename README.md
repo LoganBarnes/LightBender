@@ -4,7 +4,7 @@ Light Bender
 
 Testbed for NVIDIA OptiX
 
-![](./renderings/xwing/x-wing_both.ppm)
+![](./renderings/xwing/x-wing_both.png)
 
 
 Download
