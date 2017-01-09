@@ -36,21 +36,11 @@ public:
   ~OptixAdvancedScene( );
 
 
-  ///////////////////////////////////////////////////////////////
-  /// \brief renderSceneGui
-  ///
-  ///        Allows for specific manipulation of each scene
-  ///////////////////////////////////////////////////////////////
-  virtual
-  void renderSceneGui( );
-
-
 protected:
 
 private:
 
-  void _buildGeometry ( );
-  void _addLights ( );
+  void _buildScene ( );
 
 
 

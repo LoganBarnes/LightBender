@@ -44,7 +44,7 @@ rtDeclareVariable( unsigned int,         shadow_ray_type,  , );
 rtDeclareVariable( float,                scene_epsilon,    , );
 rtDeclareVariable( rtObject,             top_shadower,     , );
 
-rtBuffer< Light > lights;
+rtBuffer< Illuminator > illuminators;
 
 
 
@@ -63,6 +63,7 @@ closest_hit_normals( )
   float3 ffnormal         = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
   prd_current.radiance = ffnormal * 0.5f + 0.5f;
+  prd_current.done     = true;
 
 }
 
@@ -111,13 +112,14 @@ closest_hit_simple_shading( )
   float3 w_i;
   float distToLightPow2, distToLight;
 
-  for ( int i = 0; i < lights.size( ); ++i )
+  for ( int i = 0; i < illuminators.size( ); ++i )
   {
 
-    Light &light = lights[ i ];
+    Illuminator &illuminator = illuminators[ i ];
 
-    float3 lightPos         = light.center;
-    float3 incidentRadiance = light.radiantFlux / ( 8.0 * M_PIf * light.radius * light.radius );
+    float3 lightPos         = illuminator.center;
+    float3 incidentRadiance = illuminator.radiantFlux
+                              / ( 8.0 * M_PIf * illuminator.radius * illuminator.radius );
 
 
     // randomly sample sphere (only light shape for now)
@@ -143,7 +145,7 @@ closest_hit_simple_shading( )
 
       }
 
-      lightPos += samplePos * light.radius;
+      lightPos += samplePos * illuminator.radius;
 
       // direction and distance to light
       w_i             = lightPos - hitPoint;
@@ -220,8 +222,8 @@ closest_hit_bsdf( )
 {
 
 //  float3 albedo   = make_float3( 0.13f ); // moon
-  // float3 albedo   = make_float3( 0.71f, 0.62f, 0.53f ); // clay
-  // float roughness = 0.3f;
+// float3 albedo   = make_float3( 0.71f, 0.62f, 0.53f ); // clay
+// float roughness = 0.3f;
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
@@ -259,13 +261,14 @@ closest_hit_bsdf( )
   float3 w_i;
   float distToLightPow2, distToLight;
 
-  for ( int i = 0; i < lights.size( ); ++i )
+  for ( int i = 0; i < illuminators.size( ); ++i )
   {
 
-    Light &light = lights[ i ];
+    Illuminator &illuminator = illuminators[ i ];
 
-    float3 lightPos         = light.center;
-    float3 incidentRadiance = light.radiantFlux / ( 8.0f * M_PIf * light.radius * light.radius );
+    float3 lightPos         = illuminator.center;
+    float3 incidentRadiance = illuminator.radiantFlux
+                              / ( 8.0f * M_PIf * illuminator.radius * illuminator.radius );
 
 
     // randomly sample sphere (only light shape for now)
@@ -291,7 +294,7 @@ closest_hit_bsdf( )
 
       }
 
-      lightPos += samplePos * light.radius;
+      lightPos += samplePos * illuminator.radius;
 
       // direction and distance to light
       w_i             = lightPos - hitPoint;

@@ -3,15 +3,22 @@
 
 
 #include "OptixRenderer.hpp"
+
 #include <vector>
 #include <cstring>
+#include <unordered_map>
+
 #include "optixMod/optix_math_stream_namespace_mod.h"
+#include "commonStructs.h"
 
 
 namespace light
 {
 
 
+/////////////////////////////////////////////
+/// \brief The ShapeGroup struct
+/////////////////////////////////////////////
 struct ShapeGroup
 {
 
@@ -32,6 +39,11 @@ struct ShapeGroup
   std::string traverserAccel
   {
     "NoAccel"
+  };
+
+  int illuminatorIndex
+  {
+    -1
   };
 
 };
@@ -220,6 +232,18 @@ public:
 
 
   ///////////////////////////////////////////////////////////////
+  /// \brief createSphereIlluminator
+  /// \param illuminator
+  /// \param spherePrimitive
+  /// \return
+  ///////////////////////////////////////////////////////////////
+  ShapeGroup createSphereIlluminator (
+                                      const Illuminator &illuminator,
+                                      optix::Geometry    spherePrimitive
+                                      );
+
+
+  ///////////////////////////////////////////////////////////////
   /// \brief createInputBuffer
   /// \param input
   /// \return
@@ -234,16 +258,18 @@ public:
   ///        Allows for specific manipulation of each scene
   ///////////////////////////////////////////////////////////////
   virtual
-  void renderSceneGui( ) = 0;
+  void renderSceneGui ( );
 
 
 protected:
 
   optix::Material sceneMaterial_;
 
-  std::vector< optix::Program > materialPrograms_;
+  std::vector< std::string > materialNames_;
+  std::unordered_map< std::string, optix::Program > materialPrograms_;
 
-  std::vector< ShapeGroup > shapes_;
+  std::unordered_map< std::string, ShapeGroup > shapes_;
+  std::vector< Illuminator > illuminators_;
 
 
 private:

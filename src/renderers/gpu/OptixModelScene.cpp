@@ -143,15 +143,15 @@ void
 OptixModelScene::_addLights( )
 {
 
-  std::vector< Light > lights =
+  std::vector< Illuminator > lights =
   {
 
-    createLight(
-                lightLocation,
-                lightPower,
-                LightShape::SPHERE,
-                lightRadius
-                )
+//    createLight(
+//                lightLocation,
+//                lightPower,
+//                LightShape::SPHERE,
+//                lightRadius
+//                )
 
   };
 

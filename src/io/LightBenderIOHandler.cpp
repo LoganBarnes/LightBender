@@ -463,7 +463,8 @@ LightBenderIOHandler::_setScene( )
                                                               defaultWidth,
                                                               defaultHeight,
                                                               upGLWrapper_->getBuffer(
-                                                                                      "renderBuffer" )
+                                                                                      "renderBuffer"
+                                                                                      )
                                                               ) );
     break;
 
@@ -471,12 +472,19 @@ LightBenderIOHandler::_setScene( )
   case 2:
 
     upScene_
-      = std::unique_ptr< OptixScene >( new OptixModelScene(
+      = std::unique_ptr< OptixScene >( new OptixBasicScene(
                                                            defaultWidth,
                                                            defaultHeight,
-                                                           upGLWrapper_->getBuffer( "renderBuffer" ),
-                                                           modelFile
+                                                           upGLWrapper_->getBuffer( "renderBuffer" )
                                                            ) );
+
+//    upScene_
+//      = std::unique_ptr< OptixScene >( new OptixModelScene(
+//                                                           defaultWidth,
+//                                                           defaultHeight,
+//                                                           upGLWrapper_->getBuffer( "renderBuffer" ),
+//                                                           modelFile
+//                                                           ) );
     break;
 
 

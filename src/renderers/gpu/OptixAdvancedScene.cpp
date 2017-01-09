@@ -2,7 +2,6 @@
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
 #include "optixMod/optix_math_stream_namespace_mod.h"
-#include "commonStructs.h"
 #include "imgui.h"
 
 
@@ -38,8 +37,7 @@ OptixAdvancedScene::OptixAdvancedScene(
   : OptixScene( width, height, vbo )
 {
 
-  _buildGeometry( );
-  _addLights( );
+  _buildScene( );
 
   context_->validate( );
   context_->compile( );
@@ -60,182 +58,154 @@ OptixAdvancedScene::~OptixAdvancedScene( )
 /// \brief OptixAdvancedScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixAdvancedScene::_buildGeometry( )
+OptixAdvancedScene::_buildScene( )
 {
 
-  optix::Material lightMaterial = context_->createMaterial( );
-
-  // Materials
-  std::string brdfPtxFile(
-                          light::RES_PATH
-                          + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
-                          );
-
-  lightMaterial->setClosestHitProgram( 0, context_->createProgramFromPTXFile(
-                                                                             brdfPtxFile,
-                                                                             "closest_hit_emission"
-                                                                             ) );
-
+  optix::float3 albedo = optix::make_float3( 0.71f, 0.62f, 0.53f );   // clay
+  float roughness      = 0.3f;
 
   // Create primitives used in the scene
-  optix::Geometry quadPrim   = createQuadPrimitive( );
   optix::Geometry boxPrim    = createBoxPrimitive( );
+  optix::Geometry quadPrim   = createQuadPrimitive( );
   optix::Geometry spherePrim = createSpherePrimitive( );
 
-  // top group everything will get attached to
-  optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount(
-      #ifdef BIG_AND_CLOSE
-        7
-      #else
-        6
-      #endif
-        );
-
-  // attach materials to geometries
-  optix::GeometryGroup quadGroup = createGeomGroup(
-                                                   { quadPrim },
-                                                   { sceneMaterial_ },
-                                                   "NoAccel",
-                                                   "NoAccel"
-                                                   );
-
-  optix::GeometryGroup boxGroup = createGeomGroup(
-                                                  { boxPrim },
-                                                  { sceneMaterial_ },
-                                                  "NoAccel",
-                                                  "NoAccel"
+  // Create materials used in the scene
+  optix::Material groundMaterial = createMaterial(
+                                                  materialPrograms_[ "closest_hit_bsdf" ],
+                                                  materialPrograms_[ "any_hit_occlusion" ]
                                                   );
-
-  optix::GeometryGroup sphereGroup = createGeomGroup(
-                                                     { spherePrim },
-                                                     { sceneMaterial_ },
-                                                     "NoAccel",
-                                                     "NoAccel"
+  optix::Material bigBoxMaterial = createMaterial(
+                                                  materialPrograms_[ "closest_hit_bsdf" ],
+                                                  materialPrograms_[ "any_hit_occlusion" ]
+                                                  );
+  optix::Material littleBoxMaterial = createMaterial(
+                                                     materialPrograms_[ "closest_hit_bsdf" ],
+                                                     materialPrograms_[ "any_hit_occlusion" ]
                                                      );
+  optix::Material bigSphereMaterial = createMaterial(
+                                                     materialPrograms_[ "closest_hit_bsdf" ],
+                                                     materialPrograms_[ "any_hit_occlusion" ]
+                                                     );
+  optix::Material littleSphereMaterial = createMaterial(
+                                                        materialPrograms_[ "closest_hit_bsdf" ],
+                                                        materialPrograms_[ "any_hit_occlusion" ]
+                                                        );
 
-  optix::GeometryGroup lightSphereGroup = createGeomGroup(
-                                                          { spherePrim },
-                                                          { lightMaterial },
-                                                          "NoAccel",
-                                                          "NoAccel"
-                                                          );
+  groundMaterial      [ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+  bigBoxMaterial      [ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+  littleBoxMaterial   [ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+  bigSphereMaterial   [ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+  littleSphereMaterial[ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+
+  groundMaterial      [ "roughness" ]->setFloat( roughness );
+  bigBoxMaterial      [ "roughness" ]->setFloat( roughness );
+  littleBoxMaterial   [ "roughness" ]->setFloat( roughness );
+  bigSphereMaterial   [ "roughness" ]->setFloat( roughness );
+  littleSphereMaterial[ "roughness" ]->setFloat( roughness );
 
 
+  //
   // ground quad
-  attachToGroup(
-                topGroup,
-                quadGroup,
-                0,
-                optix::make_float3( 0.0f ),
-                optix::make_float3( 5.0f, 5.0f, 1.0f ),
-                M_PIf * 0.5f,
-                optix::make_float3( 1.0f, 0.0f, 0.0f )
-                );
+  //
+  shapes_[ "ground" ] = createShapeGroup(
+                                         { quadPrim },
+                                         { groundMaterial },
+                                         "NoAccel",
+                                         "NoAccel",
+                                         optix::       make_float3( 0.0f ),
+                                         optix::       make_float3( 5.0f, 5.0f, 1.0f ),
+                                         M_PIf * 0.5f,
+                                         optix::       make_float3( 1.0f, 0.0f, 0.0f )
+                                         );
 
+  //
   // stack of two boxes
-  attachToGroup( topGroup, boxGroup, 1, optix::make_float3( -2.0f, 1.0f, -1.0f ) );
-  attachToGroup(
-                topGroup, boxGroup, 2,
-                optix::make_float3(    -2.0f, 2.5f, -1.0f ),
-                optix::make_float3( 0.5f )
-                );
+  //
+  shapes_[ "big box" ] = createShapeGroup(
+                                          { boxPrim },
+                                          { bigBoxMaterial },
+                                          "NoAccel",
+                                          "NoAccel",
+                                          optix::      make_float3( -2.0f, 1.0f, -1.0f )
+                                          );
 
+  shapes_[ "little box" ] = createShapeGroup(
+                                             { boxPrim },
+                                             { littleBoxMaterial },
+                                             "NoAccel",
+                                             "NoAccel",
+                                             optix::   make_float3(    -2.0f, 2.5f, -1.0f ),
+                                             optix::   make_float3( 0.5f )
+                                             );
+
+  //
   // two spheres
-  attachToGroup( topGroup, sphereGroup, 3, optix::make_float3( 1.5f, 1.0f, 0.0f ) );
-  attachToGroup(
-                topGroup, sphereGroup, 4,
-                optix::make_float3( 2.5f, 0.5f, 1.0f ),
-                optix::make_float3( 0.5f )
-                );
+  //
+  shapes_[ "big sphere" ] = createShapeGroup(
+                                             { spherePrim },
+                                             { bigSphereMaterial },
+                                             "NoAccel",
+                                             "NoAccel",
+                                             optix::   make_float3( 1.5f, 1.0f, 0.0f )
+                                             );
 
-  // light
-  attachToGroup(
-                topGroup, lightSphereGroup, 5,
-                lightLocation,
-                optix::make_float3( lightRadius )
-                );
+  shapes_[ "little sphere" ] = createShapeGroup(
+                                                { spherePrim },
+                                                { littleSphereMaterial },
+                                                "NoAccel",
+                                                "NoAccel",
+                                                optix::make_float3( 2.5f, 0.5f, 1.0f ),
+                                                optix::make_float3( 0.5f )
+                                                );
+
+  //
+  // lights
+  //
+  Illuminator illuminator;
+  illuminator.center      = optix::make_float3( 1.0f, 4.0f, -3.0f );
+  illuminator.radiantFlux = optix::make_float3( 2500.f );
+  illuminator.shape       = LightShape::SPHERE;
+  illuminator.radius      = 0.7f;
+
+  shapes_[ "high light" ] = createSphereIlluminator( illuminator, spherePrim );
 
 
-#ifdef BIG_AND_CLOSE
+  illuminator.center      = optix::make_float3( -1.5f, 1.0f, 4.0f );
+  illuminator.radiantFlux = optix::make_float3( 500.f );
+  illuminator.shape       = LightShape::SPHERE;
+  illuminator.radius      = 0.75f;
 
-  // light
-  attachToGroup(
-                topGroup, lightSphereGroup, 6,
-                optix::make_float3( -1.5f, 1.0f, 4.0f ),
-                optix::make_float3( 0.75f )
-                );
-#endif
+  shapes_[ "low light" ] = createSphereIlluminator( illuminator, spherePrim );
 
+
+
+  //
+  // top group everything will get attached to
+  //
+  optix::Group topGroup = context_->createGroup( );
+  topGroup->setChildCount( static_cast< unsigned >( shapes_.size( ) ) );
+
+  unsigned index = 0;
+
+  for ( auto & shapePair : shapes_ )
+  {
+
+    ShapeGroup &s = shapePair.second;
+    attachToGroup( topGroup, s.group, index, s.transform );
+    ++index;
+
+  }
 
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
   context_[ "top_object"   ]->set( topGroup );
   context_[ "top_shadower" ]->set( topGroup );
 
+  context_[ "illuminators" ]->set( createInputBuffer( illuminators_ ) );
+
+
 } // OptixAdvancedScene::_buildScene
 
-
-
-///////////////////////////////////////////////////////////////
-/// \brief OptixAdvancedScene::_addLights
-///////////////////////////////////////////////////////////////
-void
-OptixAdvancedScene::_addLights( )
-{
-
-  std::vector< Light > lights =
-  {
-
-    createLight(
-                lightLocation,
-                lightPower,
-                LightShape::SPHERE,
-                lightRadius
-                )
-
-  #ifdef BIG_AND_CLOSE
-
-    , createLight(
-                  optix::float3 { -1.5f, 1.0f, 4.0f },
-                  optix::float3 { 500.0f, 500.0f, 500.0f },
-                  LightShape::SPHERE,
-                  0.75f
-                  )
-  #endif
-
-  };
-
-  float area = M_PIf * 4.0f * lightRadius * lightRadius;
-
-  context_[ "emissionRadiance" ]->setFloat(
-                                           lightPower
-                                           / ( M_PIf * area )
-                                           );
-
-  context_[ "lights" ]->set( createInputBuffer( lights ) );
-
-} // OptixAdvancedScene::_addLights
-
-
-
-///////////////////////////////////////////////////////////////
-/// \brief OptixAdvancedScene::renderSceneGui
-///
-///        Allows for specific manipulation of each scene
-///////////////////////////////////////////////////////////////
-void
-OptixAdvancedScene::renderSceneGui()
-{
-
-  if ( ImGui::CollapsingHeader( "Advanced Scene", "modelScene", false, true ) )
-  {
-
-    ImGui::Text( "Blah" );
-
-  }
-
-}
 
 
 } // namespace light

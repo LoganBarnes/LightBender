@@ -1,8 +1,9 @@
 #include "OptixScene.hpp"
+#include <sstream>
 #include "optixMod/optix_math_stream_namespace_mod.h"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
-#include "commonStructs.h"
+#include "imgui.h"
 
 
 namespace light
@@ -30,45 +31,52 @@ OptixScene::OptixScene(
                           + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
                           );
 
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "closest_hit_normals"
-                                                                  ) );
+  std::string name = "closest_hit_normals";
+  materialNames_.push_back( name );
+  materialPrograms_[ name ] = context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 name
+                                                                 );
 
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "closest_hit_simple_shading"
-                                                                  ) );
+  name = "closest_hit_simple_shading";
+  materialNames_.push_back( name );
+  materialPrograms_[ name ] = context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 name
+                                                                 );
 
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "closest_hit_bsdf"
-                                                                  ) );
+  name = "closest_hit_bsdf";
+  materialNames_.push_back( name );
+  materialPrograms_[ name ] = context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 name
+                                                                 );
 
-  sceneMaterial_->setClosestHitProgram( 0, materialPrograms_.back( ) );
 
 
   //
   // for lights
   //
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "closest_hit_emission"
-                                                                  ) );
+  name = "closest_hit_emission";
+  materialNames_.push_back( name );
+  materialPrograms_[ name ] = context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 name
+                                                                 );
 
 
   //
   // for shadowing
   //
-  materialPrograms_.push_back( context_->createProgramFromPTXFile(
-                                                                  brdfPtxFile,
-                                                                  "any_hit_occlusion"
-                                                                  ) );
+  name = "any_hit_occlusion";
+  materialNames_.push_back( name );
+  materialPrograms_[ name ] = context_->createProgramFromPTXFile(
+                                                                 brdfPtxFile,
+                                                                 name
+                                                                 );
 
-  sceneMaterial_->setAnyHitProgram( 1, materialPrograms_.back( ) );
-
-  sceneMaterial_[ "albedo"    ]->setFloat( 0.71f, 0.62f, 0.53f );
-  sceneMaterial_[ "roughness" ]->setFloat( 0.3f );
+  sceneMaterial_->setClosestHitProgram( 0, materialPrograms_[ "closest_hit_bsdf" ] );
+  sceneMaterial_->setAnyHitProgram( 1, materialPrograms_[ "any_hit_occlusion" ] );
 
 
   // defaults
@@ -98,19 +106,25 @@ void
 OptixScene::setDisplayType( int type )
 {
 
-  optix::Program currentProgram = materialPrograms_[ static_cast< size_t >( type ) ];
+  std::string programName       = materialNames_[ static_cast< size_t >( type ) ];
+  optix::Program currentProgram = materialPrograms_[ programName ];
 
   sceneMaterial_->setClosestHitProgram( 0, currentProgram );
 
-  for ( unsigned i = 0; i + 1 < shapes_.size( ); ++i )
+  for ( auto & shapePair : shapes_ )
   {
 
-    ShapeGroup &s = shapes_[ i ];
+    ShapeGroup &s = shapePair.second;
 
-    for ( optix::Material &mat : s.materials )
+    if ( s.illuminatorIndex < 0 )
     {
 
-      mat->setClosestHitProgram( 0, currentProgram );
+      for ( optix::Material &mat : s.materials )
+      {
+
+        mat->setClosestHitProgram( 0, currentProgram );
+
+      }
 
     }
 
@@ -454,10 +468,11 @@ OptixScene::createShapeGroup(
 
   ShapeGroup shape;
 
-  shape.geometries     = geometries;
-  shape.materials      = materials;
-  shape.builderAccel   = builderAccel;
-  shape.traverserAccel = traverserAccel;
+  shape.geometries       = geometries;
+  shape.materials        = materials;
+  shape.builderAccel     = builderAccel;
+  shape.traverserAccel   = traverserAccel;
+  shape.illuminatorIndex = -1;
 
   optix::Matrix4x4 T = optix::Matrix4x4::translate( translation );
   optix::Matrix4x4 S = optix::Matrix4x4::scale( scale );
@@ -470,6 +485,178 @@ OptixScene::createShapeGroup(
   return shape;
 
 } // OptixScene::createShapeGroup
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief OptixScene::createSphereIlluminator
+/// \param illuminator
+/// \param spherePrimitive
+/// \return
+///////////////////////////////////////////////////////////////
+ShapeGroup
+OptixScene::createSphereIlluminator(
+                                    const Illuminator &illuminator,
+                                    optix::Geometry    spherePrimitive
+                                    )
+{
+
+  illuminators_.push_back( illuminator );
+
+  optix::Material material = context_->createMaterial( );
+  material->setClosestHitProgram( 0, materialPrograms_[ "closest_hit_emission" ] );
+
+  float area             = M_PIf * 4.0f * illuminator.radius * illuminator.radius;
+  optix::float3 emission = illuminator.radiantFlux / ( M_PIf * area );
+
+  material[ "emissionRadiance" ]->setFloat( emission );
+
+  ShapeGroup shape = createShapeGroup(
+                                      { spherePrimitive },
+                                      { material },
+                                      "NoAccel",
+                                      "NoAccel",
+                                      illuminator.center,
+                                      optix::make_float3( illuminator.radius )
+                                      );
+
+  shape.illuminatorIndex = illuminators_.size( ) - 1;
+
+  return shape;
+
+} // OptixScene::createSphereIlluminator
+
+
+
+///////////////////////////////////////////////////////////////
+/// \brief Optixcene::renderSceneGui
+///
+///        Allows for specific manipulation of each scene
+///////////////////////////////////////////////////////////////
+void
+OptixScene::renderSceneGui( )
+{
+
+  if ( ImGui::CollapsingHeader( "Scene Settings", "defaultScene", false, true ) )
+  {
+
+    std::stringstream stream;
+
+    for ( auto & shapePair : shapes_ )
+    {
+
+      ShapeGroup &shape       = shapePair.second;
+      const std::string &name = shapePair.first;
+
+      if ( shape.illuminatorIndex < 0 )
+      {
+
+        ImGui::Separator( );
+
+        ImGui::Text( "%s", name.c_str( ) );
+
+
+        //
+        // albedo
+        //
+        optix::float3 albedo = shape.materials[ 0 ][ "albedo" ]->getFloat3( );
+        float albedoOld[ 3 ] = { albedo.x, albedo.y, albedo.z };
+        float albedoNew[ 3 ] = { albedo.x, albedo.y, albedo.z };
+
+        stream << "Albedo " << name;
+        ImGui::ColorEdit3( stream.str( ).c_str( ), albedoNew );
+        stream.str( std::string( ) );
+
+        if (
+            albedoOld[ 0 ] != albedoNew[ 0 ]
+            || albedoOld[ 1 ] != albedoNew[ 1 ]
+            || albedoOld[ 2 ] != albedoNew[ 2 ]
+            )
+        {
+
+          shape.materials[ 0 ][ "albedo" ]->setFloat(
+                                                     albedoNew[ 0 ],
+                                                     albedoNew[ 1 ],
+                                                     albedoNew[ 2 ]
+                                                     );
+          resetFrameCount( );
+
+        }
+
+        //
+        // roughness
+        //
+        float roughness    = shape.materials[ 0 ][ "roughness" ]->getFloat( );
+        float roughnessOld = roughness;
+
+        stream << "Roughness " << name;
+        ImGui::SliderFloat( stream.str( ).c_str( ), &roughness, 0.0, 1.0 );
+        stream.str( std::string( ) );
+
+        if ( roughnessOld != roughness )
+        {
+
+          shape.materials[ 0 ][ "roughness" ]->setFloat( roughness );
+          resetFrameCount( );
+
+        }
+
+      }
+
+    } // shapes for loop
+
+    bool updateLightBuffer = false;
+
+    for ( auto & shapePair : shapes_ )
+    {
+
+      ShapeGroup &shape       = shapePair.second;
+      const std::string &name = shapePair.first;
+
+      if ( shape.illuminatorIndex >= 0 )
+      {
+
+        Illuminator &i = illuminators_[ static_cast< unsigned >( shape.illuminatorIndex ) ];
+
+        ImGui::Separator( );
+
+        ImGui::Text( "%s", name.c_str( ) );
+
+        float fluxOld[ 3 ] = { i.radiantFlux.x, i.radiantFlux.y, i.radiantFlux.z };
+
+        stream << "Power (W) " << name;
+        ImGui::SliderFloat3( stream.str( ).c_str( ), fluxOld, 1.0f, 3000.0f );
+        stream.str( std::string( ) );
+
+        if ( fluxOld[ 0 ] != i.radiantFlux.x
+            | fluxOld[ 1 ] != i.radiantFlux.y
+            | fluxOld[ 2 ] != i.radiantFlux.z )
+        {
+
+          i.radiantFlux     = optix::make_float3( fluxOld[ 0 ], fluxOld[ 1 ], fluxOld[ 2 ] );
+          updateLightBuffer = true;
+
+        }
+
+      }
+
+    } // lights for loop
+
+    if ( updateLightBuffer )
+    {
+
+      optix::Buffer illumBuf = context_[ "illuminators" ]->getBuffer( );
+      illumBuf->destroy( );
+
+      context_[ "illuminators" ]->setBuffer( createInputBuffer( illuminators_ ) );
+
+      resetFrameCount( );
+
+    }
+
+  } // collapsing header
+
+} // OptixBasicScene::renderSceneGui
 
 
 
