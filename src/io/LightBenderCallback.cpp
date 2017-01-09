@@ -10,10 +10,11 @@ namespace light
 
 LightBenderCallback::LightBenderCallback( LightBenderIOHandler &handler )
   : shared::SharedCallback( )
-  , handler_( handler )
-  , leftMouseDown_( false )
+  , handler_       ( handler )
+  , leftMouseDown_ ( false )
   , rightMouseDown_( false )
-  , shiftDown_( false )
+  , shiftDown_     ( false )
+  , ctrlDown_      ( false )
 {}
 
 
@@ -101,6 +102,7 @@ LightBenderCallback::handleKey(
                                int
                                )
 {
+
   switch ( key )
   {
 
@@ -114,6 +116,7 @@ LightBenderCallback::handleKey(
     }
 
     break;
+
 
   case GLFW_KEY_LEFT_SHIFT:
   case GLFW_KEY_RIGHT_SHIFT:
@@ -133,7 +136,38 @@ LightBenderCallback::handleKey(
 
     break;
 
+
+  case GLFW_KEY_LEFT_CONTROL:
+  case GLFW_KEY_RIGHT_CONTROL:
+
+    if ( action == GLFW_PRESS )
+    {
+
+      ctrlDown_ = true;
+
+    }
+    else
+    {
+
+      ctrlDown_ = false;
+
+    }
+
+    break;
+
+
+  case GLFW_KEY_S:
+
+    if ( action == GLFW_RELEASE && ctrlDown_ )
+    {
+
+      handler_.saveFrame( );
+
+    }
+
+
   default:
+
     break;
 
   } // switch
@@ -157,7 +191,8 @@ LightBenderCallback::handleCursorPosition(
     handler_.rotateCamera( prevX_ - xpos, prevY_ - ypos );
 
   }
-  else if ( rightMouseDown_ )
+  else
+  if ( rightMouseDown_ )
   {
 
     handler_.zoomCamera( prevY_ - ypos );
@@ -167,7 +202,7 @@ LightBenderCallback::handleCursorPosition(
   prevX_ = xpos;
   prevY_ = ypos;
 
-}
+} // handleCursorPosition
 
 
 

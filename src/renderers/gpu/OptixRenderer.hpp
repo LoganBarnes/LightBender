@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "optixu/optixpp_namespace.h"
 #include "RendererInterface.hpp"
+#include <string>
 
 
 namespace light
@@ -51,6 +52,9 @@ public:
 
   virtual
   void renderWorld ( const graphics::Camera &camera ) final;
+
+
+  void saveFrame( const std::string &filename );
 
 
   optix::Buffer getBuffer ( );

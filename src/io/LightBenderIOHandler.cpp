@@ -42,6 +42,8 @@ int sqrtSamples = 1;
 int maxBounces  = 5;
 int firstBounce = 0;
 
+std::string outputFilename = "lightBenderFrame.ppm";
+
 }
 
 
@@ -183,6 +185,21 @@ LightBenderIOHandler::resize(
   upCamera_->setAspectRatio( w * 1.0f / h );
 
   upScene_->resetFrameCount( );
+
+}
+
+
+
+/////////////////////////////////////////////
+/// \brief LightBenderIOHandler::saveFrame
+///
+/// \author Logan Barnes
+/////////////////////////////////////////////
+void
+LightBenderIOHandler::saveFrame( )
+{
+
+  upScene_->saveFrame( light::OUTPUT_PATH + outputFilename );
 
 }
 
@@ -398,6 +415,26 @@ LightBenderIOHandler::_onGuiRender( )
 
   upScene_->renderSceneGui( );
 
+  //
+  // output filename
+  //
+  if ( ImGui::CollapsingHeader( "Output", "output", false, false ) )
+  {
+
+    constexpr unsigned bufSize = 512;
+
+    std::vector< char > cstr(
+                             outputFilename.c_str( ),
+                             outputFilename.c_str( ) + outputFilename.size( ) + 1
+                             );
+
+    cstr.resize( bufSize );
+
+    ImGui::InputText( "Output file", cstr.data( ), bufSize );
+
+    outputFilename = std::string( cstr.data( ) );
+
+  }
 
   //
   // Control listing
@@ -413,6 +450,7 @@ LightBenderIOHandler::_onGuiRender( )
                 );
 
   }
+
 
   ImGui::End( );
 

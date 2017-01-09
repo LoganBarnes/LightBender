@@ -66,6 +66,7 @@ private:
   bool rightMouseDown_;
 
   bool shiftDown_;
+  bool ctrlDown_;
 
   double prevX_;
   double prevY_;
