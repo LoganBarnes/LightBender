@@ -94,12 +94,12 @@ Renderings
 ![](renderings/xwing/png/x-wing_under.png)
 ![](renderings/xwing/png/x-wing_back.png)
 
-#### Direct illumination (no scattering or reflecting of light)
+#### Direct illumination (directly from a light source):
 ![](renderings/xwing/png/x-wing_direct.png)
 
-#### Indirect illumination (light scattered and reflected off objects)
+#### Indirect illumination (light scattered and reflected off objects):
 ![](renderings/xwing/png/x-wing_indirect.png)
 
-#### All illumination
+#### Direct and indirect illumination together:
 ![](renderings/xwing/png/x-wing_both.png)
 
