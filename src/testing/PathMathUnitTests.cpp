@@ -310,13 +310,17 @@ MATCHER( Float2Ge, "is less than or equal to" )
 ////////////////////////////////////////////////////////
 // test pointwise container comparison
 ////////////////////////////////////////////////////////
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 TEST_F( PathMathUnitTests, PointwiseMatcherHelpers )
 {
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
   using namespace ::testing;
 
@@ -353,13 +357,17 @@ TEST_F( PathMathUnitTests, PointwiseMatcherHelpers )
 //////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 TEST_F( PathMathUnitTests, VectorBuilderHelpers )
 {
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
   using namespace ::testing;
 
@@ -453,13 +461,17 @@ TEST_F( PathMathUnitTests, VectorBuilderHelpers )
 //////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 TEST_F( PathMathUnitTests, NoJitterSingleSample )
 {
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
   using namespace ::testing;
 
@@ -532,13 +544,17 @@ TEST_F( PathMathUnitTests, NoJitterSingleSample )
 //////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 TEST_F( PathMathUnitTests, JitterSingleSample )
 {
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
   using namespace ::testing;
 

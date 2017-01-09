@@ -585,7 +585,8 @@ OptixScene::createSphereIlluminator(
                                       optix::make_float3( illuminator.radius )
                                       );
 
-  shape.illuminatorIndex = illuminators_.size( ) - 1;
+  // illuminators_.size() is at least 1 since we added one above
+  shape.illuminatorIndex = static_cast< int >( illuminators_.size( ) ) - 1;
 
   return shape;
 

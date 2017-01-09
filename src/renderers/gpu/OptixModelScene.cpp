@@ -126,7 +126,7 @@ OptixModelScene::_buildScene( const std::string &filename )
   mesh.context  = context_;
   mesh.material = modelMaterial;
 
-  loadMesh( filename, mesh );
+  loadMesh( filename, mesh, light::RES_PATH + "ptx/" );
 
   shapes_[ "model" ] = createShapeGroup(
                                         { mesh.geom_instance },

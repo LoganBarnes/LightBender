@@ -62,8 +62,10 @@ void SavePPM(const unsigned char *Pix, const char *fname, int wid, int hgt, int 
 //
 // stupid thirdparty code causing warnings
 //
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 void displayBufferPPM( const char *filename, RTbuffer buffer)
 {
@@ -167,7 +169,9 @@ void displayBufferPPM( const std::string &filename, optix::Buffer buffer)
 
 }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
 
 }
@@ -391,8 +395,10 @@ OptixRenderer::renderWorld( const graphics::Camera &camera )
 //
 // stupid thirdparty code causing warnings
 //
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 ///
 /// \brief OptixRenderer::saveFrame
@@ -406,8 +412,9 @@ OptixRenderer::saveFrame( const std::string &filename )
 
 }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
-
+#endif
 
 
 ///

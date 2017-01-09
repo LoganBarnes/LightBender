@@ -12,7 +12,6 @@
 ###################
 *.o
 build/
-
 # cuda
 *.ptx
 
@@ -28,7 +27,6 @@ build/
 #############
 Makefile
 
-
 # Run Install Dirs #
 ####################
 run/_build
@@ -37,6 +35,10 @@ run/include
 run/lib
 run/testbin
 *.ini
+run/output/*
+
+# Custom Output #
+#################
 run/output/*
 
 # Valgrind #
