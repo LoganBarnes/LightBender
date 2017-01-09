@@ -37,21 +37,11 @@ public:
   ~OptixModelScene( );
 
 
-  ///////////////////////////////////////////////////////////////
-  /// \brief renderSceneGui
-  ///
-  ///        Allows for specific manipulation of each scene
-  ///////////////////////////////////////////////////////////////
-  virtual
-  void renderSceneGui( );
-
-
 protected:
 
 private:
 
-  void _buildGeometry ( const std::string &filename );
-  void _addLights ( );
+  void _buildScene ( const std::string &filename );
 
 
 

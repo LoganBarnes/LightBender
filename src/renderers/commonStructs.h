@@ -14,6 +14,7 @@ struct LightShape
   {
 
     SPHERE,
+//    IRRADIANCE_SPHERE,
     NUM_LIGHT_SHAPES
 
   };

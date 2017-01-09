@@ -63,7 +63,6 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
   //
   // OpenGL
   //
-
   upGLWrapper_->init( );
 
   upGLWrapper_->setViewportSize( defaultWidth, defaultHeight );
@@ -103,7 +102,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                                         GL_STREAM_DRAW
                                         );
 
-  _setScene( );
+    _setScene( );
 
 
   //
@@ -472,19 +471,12 @@ LightBenderIOHandler::_setScene( )
   case 2:
 
     upScene_
-      = std::unique_ptr< OptixScene >( new OptixBasicScene(
+      = std::unique_ptr< OptixScene >( new OptixModelScene(
                                                            defaultWidth,
                                                            defaultHeight,
-                                                           upGLWrapper_->getBuffer( "renderBuffer" )
+                                                           upGLWrapper_->getBuffer( "renderBuffer" ),
+                                                           modelFile
                                                            ) );
-
-//    upScene_
-//      = std::unique_ptr< OptixScene >( new OptixModelScene(
-//                                                           defaultWidth,
-//                                                           defaultHeight,
-//                                                           upGLWrapper_->getBuffer( "renderBuffer" ),
-//                                                           modelFile
-//                                                           ) );
     break;
 
 

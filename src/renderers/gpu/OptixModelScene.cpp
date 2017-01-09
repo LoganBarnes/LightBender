@@ -10,10 +10,6 @@
 namespace light
 {
 
-const optix::float3 lightLocation = optix::make_float3( 4.0f, 6.5f, 4.0f );
-const optix::float3 lightPower    = optix::make_float3( 120.f );
-constexpr float lightRadius       = 0.1f;
-
 
 ///////////////////////////////////////////////////////////////
 /// \brief OptixModelScene::OptixModelScene
@@ -27,8 +23,7 @@ OptixModelScene::OptixModelScene(
   : OptixScene( width, height, vbo )
 {
 
-  _buildGeometry( filename );
-  _addLights( );
+  _buildScene( filename );
 
   context_->validate( );
   context_->compile( );
@@ -49,141 +44,141 @@ OptixModelScene::~OptixModelScene( )
 /// \brief OptixModelScene::_buildScene
 ///////////////////////////////////////////////////////////////
 void
-OptixModelScene::_buildGeometry( const std::string &filename )
+OptixModelScene::_buildScene( const std::string &filename )
 {
 
-  optix::Material lightMaterial = context_->createMaterial( );
-
-  // Materials
-  std::string brdfPtxFile(
-                          light::RES_PATH
-                          + "ptx/cudaLightBender_generated_Brdf.cu.ptx"
-                          );
-
-  lightMaterial->setClosestHitProgram( 0, context_->createProgramFromPTXFile(
-                                                                             brdfPtxFile,
-                                                                             "closest_hit_emission"
-                                                                             ) );
-
+  optix::float3 albedo = optix::make_float3( 0.71f, 0.62f, 0.53f );   // clay
+  float roughness      = 0.3f;
 
   // Create primitives used in the scene
   optix::Geometry quadPrim   = createQuadPrimitive( );
   optix::Geometry spherePrim = createSpherePrimitive( );
 
-  // top group everything will get attached to
-  optix::Group topGroup = context_->createGroup( );
-  topGroup->setChildCount( 3 );
+  // Create materials used in the scene
+  optix::Material groundMaterial = createMaterial(
+                                                  materialPrograms_[ "closest_hit_bsdf" ],
+                                                  materialPrograms_[ "any_hit_occlusion" ]
+                                                  );
 
+  optix::Material wallMaterial = createMaterial(
+                                                materialPrograms_[ "closest_hit_bsdf" ],
+                                                materialPrograms_[ "any_hit_occlusion" ]
+                                                );
+
+  optix::Material modelMaterial = createMaterial(
+                                                 materialPrograms_[ "closest_hit_bsdf" ],
+                                                 materialPrograms_[ "any_hit_occlusion" ]
+                                                 );
+
+  groundMaterial[ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+  wallMaterial  [ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+  modelMaterial [ "albedo" ]->setFloat( albedo.x, albedo.y, albedo.z );
+
+  groundMaterial[ "roughness" ]->setFloat( roughness );
+  wallMaterial  [ "roughness" ]->setFloat( roughness );
+  modelMaterial [ "roughness" ]->setFloat( roughness );
+
+
+  //
+  // ground quad
+  //
+  shapes_[ "ground" ] = createShapeGroup(
+                                         { quadPrim },
+                                         { groundMaterial },
+                                         "NoAccel",
+                                         "NoAccel",
+                                         optix::make_float3( 0.0f, -0.0f, 0.0f ),
+                                         optix::make_float3( 8.0f, 8.0f, 1.0f ),
+                                         M_PIf * 0.5f,
+                                         optix::make_float3( 1.0f, 0.0f, 0.0f )
+                                         );
+
+  //
+  // back wall
+  //
+  shapes_[ "back wall" ] = createShapeGroup(
+                                            { quadPrim },
+                                            { wallMaterial },
+                                            "NoAccel",
+                                            "NoAccel",
+                                            optix::make_float3( 0.0f, 4.0f, -8.0f ),
+                                            optix::make_float3( 8.0f, 4.0f, 1.0f )
+                                            );
+
+  //
+  // left wall
+  //
+  shapes_[ "left wall" ] = createShapeGroup(
+                                            { quadPrim },
+                                            { wallMaterial },
+                                            "NoAccel",
+                                            "NoAccel",
+                                            optix::make_float3( -8.0f, 4.0f, 0.0f ),
+                                            optix::make_float3( 8.0f, 4.0f, 1.0f ),
+                                            M_PIf * 0.5f,
+                                            optix::make_float3( 0.0f, 1.0f, 0.0f )
+                                            );
+
+  //
   // mesh geom group
+  //
   OptiXMesh mesh;
+  mesh.context  = context_;
+  mesh.material = modelMaterial;
 
-  mesh.context = context_;
   loadMesh( filename, mesh );
 
-  optix::GeometryGroup meshGroup = context_->createGeometryGroup( );
-  meshGroup->addChild( mesh.geom_instance );
-  meshGroup->setAcceleration( context_->createAcceleration( "Trbvh", "Bvh" ) );
+  shapes_[ "model" ] = createShapeGroup(
+                                        { mesh.geom_instance },
+                                        "Trbvh",
+                                        "Bvh",
+                                        optix::make_float3( 0.0f, -0.0f, 5.0f )
+                                        );
 
 
-  optix::GeometryGroup quadGroup = createGeomGroup(
-                                                   { quadPrim },
-                                                   { sceneMaterial_ },
-                                                   "NoAccel",
-                                                   "NoAccel"
-                                                   );
+  shapes_[ "model" ].materials.push_back( mesh.material );
 
-  // lights
-  optix::GeometryGroup lightSphereGroup = createGeomGroup(
-                                                          { spherePrim },
-                                                          { lightMaterial },
-                                                          "NoAccel",
-                                                          "NoAccel"
-                                                          );
 
-  // ground quad
-  attachToGroup(
-                topGroup,
-                quadGroup,
-                0,
-                optix::make_float3( 0.0f, -0.0f, 0.0f ),
-                optix::make_float3( 8.0f, 8.0f, 1.0f ),
-                M_PIf * 0.5f,
-                optix::make_float3( 1.0f, 0.0f, 0.0f )
-                );
+  //
+  // lights 1.362f W/m^2 at surface
+  //
+  Illuminator illuminator;
+  illuminator.center      = optix::normalize( optix::make_float3( 4.0f, 10.0f, 4.0f ) ) * 149.6e9f;
+  illuminator.radiantFlux = optix::make_float3( 4.1e26f ) * 0.01f; // 0.01 for arbitrary atmosphere
+  illuminator.shape       = LightShape::SPHERE;
+  illuminator.radius      = 695.7e6f;
 
-  // model
-  attachToGroup(
-                topGroup,
-                meshGroup,
-                1,
-                optix::make_float3( 0.0f, 0.0f, 5.0f )
-                );
+  shapes_[ "light1" ] = createSphereIlluminator( illuminator, spherePrim );
 
-  // light
-  attachToGroup(
-                topGroup, lightSphereGroup, 2,
-                lightLocation,
-                optix::make_float3( lightRadius )
-                );
 
+  //
+  // top group everything will get attached to
+  //
+  optix::Group topGroup = context_->createGroup( );
+  topGroup->setChildCount( static_cast< unsigned >( shapes_.size( ) ) );
+
+  unsigned index = 0;
+
+  for ( auto &shapePair : shapes_ )
+  {
+
+    ShapeGroup &s = shapePair.second;
+    attachToGroup( topGroup, s.group, index, s.transform );
+    ++index;
+
+  }
 
   topGroup->setAcceleration( context_->createAcceleration( "Bvh", "Bvh" ) );
 
   context_[ "top_object"   ]->set( topGroup );
   context_[ "top_shadower" ]->set( topGroup );
 
+  context_[ "illuminators" ]->set( createInputBuffer( illuminators_ ) );
+
 } // OptixModelScene::_buildScene
 
 
 
-///////////////////////////////////////////////////////////////
-/// \brief OptixModelScene::_addLights
-///////////////////////////////////////////////////////////////
-void
-OptixModelScene::_addLights( )
-{
-
-  std::vector< Illuminator > lights =
-  {
-
-//    createLight(
-//                lightLocation,
-//                lightPower,
-//                LightShape::SPHERE,
-//                lightRadius
-//                )
-
-  };
-
-  float area = M_PIf * 4.0f * lightRadius * lightRadius;
-
-  context_[ "emissionRadiance" ]->setFloat(
-                                           lightPower
-                                           / ( M_PIf * area )
-                                           );
-
-  context_[ "lights" ]->set( createInputBuffer( lights ) );
-
-} // OptixModelScene::_addLights
-
-
-
-
-///////////////////////////////////////////////////////////////
-/// \brief OptixModelScene::renderSceneGui
-///////////////////////////////////////////////////////////////
-void
-OptixModelScene::renderSceneGui()
-{
-
-  if ( ImGui::CollapsingHeader( "Model Scene", "modelScene", false, true ) )
-  {
-
-    ImGui::Text( "Blah" );
-
-  }
-
-}
 
 
 } // namespace light

@@ -21,7 +21,7 @@ createONB(
 
   if ( dot( U, U ) < 1.e-3f )
   {
-    U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
+  U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
   }
 
   U = normalize( U );
@@ -117,9 +117,8 @@ closest_hit_simple_shading( )
 
     Illuminator &illuminator = illuminators[ i ];
 
-    float3 lightPos         = illuminator.center;
-    float3 incidentRadiance = illuminator.radiantFlux
-                              / ( 8.0 * M_PIf * illuminator.radius * illuminator.radius );
+    float3 lightPos = illuminator.center;
+    float3 flux     = illuminator.radiantFlux;
 
 
     // randomly sample sphere (only light shape for now)
@@ -154,8 +153,8 @@ closest_hit_simple_shading( )
       w_i            /= distToLight; // normalizes w_i
 
       // lambertian emitter
-      ///\todo: Figure out correct term here
-      incidentRadiance *= 0.5 * dot( -w_i, samplePos );
+      ///\todo: Sample by sollid angle for quicker convergance
+      flux *= 0.5f * max( 0.0, dot( -w_i, samplePos ) );
 
     }
     else
@@ -167,8 +166,7 @@ closest_hit_simple_shading( )
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
 
-      ///\todo: Figure out correct term here
-      incidentRadiance *= 0.25;
+      flux /= M_PIf;
 
     }
 
@@ -194,9 +192,11 @@ closest_hit_simple_shading( )
       // shoot ray into scene
       rtTrace( top_shadower, shadow_ray, shadow_prd );
 
+      float distPow2 = distToLight + illuminator.radius;
+      distPow2 *= distPow2;
 
       radiance += ( simpleShadeConstant / M_PIf )          // lambertian pi normalization
-                  * ( incidentRadiance / distToLightPow2 ) // inverse square law
+                  * ( flux / ( M_PIf * 4.0f * distPow2 ) ) // inverse square law
                   * cosAngle                               // angle between normal and incident ray
                   * shadow_prd.attenuation;                // attenuation from shadowing objects
 
@@ -266,9 +266,8 @@ closest_hit_bsdf( )
 
     Illuminator &illuminator = illuminators[ i ];
 
-    float3 lightPos         = illuminator.center;
-    float3 incidentRadiance = illuminator.radiantFlux
-                              / ( 8.0f * M_PIf * illuminator.radius * illuminator.radius );
+    float3 lightPos = illuminator.center;
+    float3 flux     = illuminator.radiantFlux;
 
 
     // randomly sample sphere (only light shape for now)
@@ -303,8 +302,8 @@ closest_hit_bsdf( )
       w_i            /= distToLight; // normalizes w_i
 
       // lambertian emitter
-      ///\todo: Figure out correct term here
-      incidentRadiance *= 0.5 * dot( -w_i, samplePos );
+      ///\todo: Sample by sollid angle for quicker convergance
+      flux *= 0.5f * max( 0.0, dot( -w_i, samplePos ) );
 
     }
     else
@@ -317,7 +316,7 @@ closest_hit_bsdf( )
       w_i            /= distToLight; // normalizes w_i
 
       ///\todo: Figure out correct term here
-      incidentRadiance *= 0.25;
+      flux /= M_PIf;
 
     }
 
@@ -345,9 +344,11 @@ closest_hit_bsdf( )
       // shoot ray into scene
       rtTrace( top_shadower, shadow_ray, shadow_prd );
 
+      float distPow2 = distToLight + illuminator.radius;
+      distPow2 *= distPow2;
 
       // bsdf calculation added below
-      localRadiance = ( incidentRadiance / distToLightPow2 ) // incident radiance
+      localRadiance = ( flux / ( M_PIf * 4.0f * distPow2 ) ) // incident radiance
                       * cosAngle                             // angle between normal and incident ray
                       * shadow_prd.attenuation;              // attenuation from shadowing objects
 

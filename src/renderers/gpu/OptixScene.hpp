@@ -231,6 +231,29 @@ public:
                                );
 
 
+
+  ///////////////////////////////////////////////////////////////
+  /// \brief createShapeGroup
+  /// \param geomInstances
+  /// \param builderAccel
+  /// \param traverserAccel
+  /// \param translation
+  /// \param scale
+  /// \param rotationAngle
+  /// \param rotationAxis
+  /// \return
+  ///////////////////////////////////////////////////////////////
+  ShapeGroup createShapeGroup(
+                              const std::vector< optix::GeometryInstance > geomInstances,
+                              const std::string &builderAccel   = "NoAccel",
+                              const std::string &traverserAccel = "NoAccel",
+                              optix::float3 translation   = optix::float3 { 0.0f, 0.0f, 0.0f },
+                              optix::float3 scale         = optix::float3 { 1.0f, 1.0f, 1.0f },
+                              float rotationAngle         = 0.0f,
+                              optix::float3 rotationAxis  = optix::float3 { 0.0f, 1.0f, 0.0f }
+                              );
+
+
   ///////////////////////////////////////////////////////////////
   /// \brief createSphereIlluminator
   /// \param illuminator

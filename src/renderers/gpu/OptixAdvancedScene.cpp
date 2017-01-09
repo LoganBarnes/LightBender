@@ -5,25 +5,9 @@
 #include "imgui.h"
 
 
-#define BIG_AND_CLOSE
-
 
 namespace light
 {
-
-#ifndef BIG_AND_CLOSE
-
-const optix::float3 lightLocation = optix::make_float3( 2.0f, 6.0f, 4.0f );
-const optix::float3 lightPower    = optix::make_float3( 120.f );
-constexpr float lightRadius       = 0.1f;
-
-#else
-
-const optix::float3 lightLocation = optix::make_float3( 1.0f, 4.0f, -3.0f );
-const optix::float3 lightPower    = optix::make_float3( 2500.f );
-constexpr float lightRadius       = 0.7f;
-
-#endif
 
 
 ///////////////////////////////////////////////////////////////

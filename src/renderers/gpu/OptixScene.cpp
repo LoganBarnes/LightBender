@@ -32,6 +32,7 @@ OptixScene::OptixScene(
                           );
 
   std::string name = "closest_hit_normals";
+
   materialNames_.push_back( name );
   materialPrograms_[ name ] = context_->createProgramFromPTXFile(
                                                                  brdfPtxFile,
@@ -111,7 +112,7 @@ OptixScene::setDisplayType( int type )
 
   sceneMaterial_->setClosestHitProgram( 0, currentProgram );
 
-  for ( auto & shapePair : shapes_ )
+  for ( auto &shapePair : shapes_ )
   {
 
     ShapeGroup &s = shapePair.second;
@@ -187,6 +188,7 @@ OptixScene::createBoxPrimitive(
   optix::Program box_intersect = context_->createProgramFromPTXFile( box_ptx, "box_intersect" );
 
   optix::Geometry box = context_->createGeometry( );
+
   box->setPrimitiveCount( 1u );
   box->setBoundingBoxProgram( box_bounds );
   box->setIntersectionProgram( box_intersect );
@@ -218,6 +220,7 @@ OptixScene::createSpherePrimitive(
   optix::Program sphere_intersect = context_->createProgramFromPTXFile( sphere_ptx, "intersect" );
 
   optix::Geometry sphere = context_->createGeometry( );
+
   sphere->setPrimitiveCount( 1u );
   sphere->setBoundingBoxProgram ( sphere_bounds );
   sphere->setIntersectionProgram( sphere_intersect );
@@ -225,7 +228,7 @@ OptixScene::createSpherePrimitive(
 
   return sphere;
 
-}
+} // createSpherePrimitive
 
 
 
@@ -250,6 +253,7 @@ OptixScene::createQuadPrimitive(
   optix::Program quad_intersect = context_->createProgramFromPTXFile( quad_ptx, "intersect" );
 
   optix::Geometry quad = context_->createGeometry( );
+
   quad->setPrimitiveCount( 1u );
   quad->setBoundingBoxProgram( quad_bounds );
   quad->setIntersectionProgram( quad_intersect );
@@ -400,6 +404,7 @@ OptixScene::attachToGroup(
 {
 
   optix::Transform trans = context_->createTransform( );
+
   trans->setChild( geomGroup );
   group->setChild( childNum, trans );
 
@@ -432,6 +437,7 @@ OptixScene::attachToGroup(
 {
 
   optix::Transform trans = context_->createTransform( );
+
   trans->setChild( geomGroup );
   group->setChild( childNum, trans );
 
@@ -459,10 +465,10 @@ OptixScene::createShapeGroup(
                              const std::vector< optix::Material > &materials,
                              const std::string                    &builderAccel,
                              const std::string                    &traverserAccel,
-                             optix::float3                         translation,
-                             optix::float3                         scale,
-                             float                                 rotationAngle,
-                             optix::float3                         rotationAxis
+                             optix::float3                        translation,
+                             optix::float3                        scale,
+                             float                                rotationAngle,
+                             optix::float3                        rotationAxis
                              )
 {
 
@@ -489,6 +495,65 @@ OptixScene::createShapeGroup(
 
 
 ///////////////////////////////////////////////////////////////
+/// \brief OptixScene::createShapeGroup
+/// \param geomInstances
+/// \param builderAccel
+/// \param traverserAccel
+/// \param translation
+/// \param scale
+/// \param rotationAngle
+/// \param rotationAxis
+/// \return
+///////////////////////////////////////////////////////////////
+ShapeGroup
+OptixScene::createShapeGroup(
+                             const std::vector< optix::GeometryInstance > geomInstances,
+                             const std::string                            &builderAccel,
+                             const std::string                            &traverserAccel,
+                             optix::float3                                translation,
+                             optix::float3                                scale,
+                             float                                        rotationAngle,
+                             optix::float3                                rotationAxis
+                             )
+{
+
+  ShapeGroup shape;
+
+  shape.builderAccel     = builderAccel;
+  shape.traverserAccel   = traverserAccel;
+  shape.illuminatorIndex = -1;
+
+  optix::Matrix4x4 T = optix::Matrix4x4::translate( translation );
+  optix::Matrix4x4 S = optix::Matrix4x4::scale( scale );
+  optix::Matrix4x4 R = optix::Matrix4x4::rotate( rotationAngle, rotationAxis );
+
+  shape.transform = T * R * S;
+
+  unsigned numInstances = static_cast< unsigned >( geomInstances.size( ) );
+
+  // fill out geometry group for all geometries and materials
+  shape.group = context_->createGeometryGroup( );
+  shape.group->setChildCount( numInstances );
+
+  for ( unsigned i = 0; i < numInstances; ++i )
+  {
+
+    shape.group->setChild( i, geomInstances[ i ] );
+
+  }
+
+  shape.group->setAcceleration( context_->createAcceleration(
+                                                             builderAccel.c_str( ),
+                                                             traverserAccel.c_str( )
+                                                             ) );
+
+  return shape;
+
+} // OptixScene::createShapeGroup
+
+
+
+///////////////////////////////////////////////////////////////
 /// \brief OptixScene::createSphereIlluminator
 /// \param illuminator
 /// \param spherePrimitive
@@ -497,7 +562,7 @@ OptixScene::createShapeGroup(
 ShapeGroup
 OptixScene::createSphereIlluminator(
                                     const Illuminator &illuminator,
-                                    optix::Geometry    spherePrimitive
+                                    optix::Geometry   spherePrimitive
                                     )
 {
 
@@ -542,7 +607,10 @@ OptixScene::renderSceneGui( )
 
     std::stringstream stream;
 
-    for ( auto & shapePair : shapes_ )
+    //
+    // Non-emitting shapes
+    //
+    for ( auto &shapePair : shapes_ )
     {
 
       ShapeGroup &shape       = shapePair.second;
@@ -605,9 +673,14 @@ OptixScene::renderSceneGui( )
 
     } // shapes for loop
 
+
+
+    //
+    // Illuminators
+    //
     bool updateLightBuffer = false;
 
-    for ( auto & shapePair : shapes_ )
+    for ( auto &shapePair : shapes_ )
     {
 
       ShapeGroup &shape       = shapePair.second;
