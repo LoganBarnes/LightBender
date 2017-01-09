@@ -75,8 +75,7 @@ cmake -DCMAKE_GENERATOR_PLATFORM=x64 ../..
 cmake --build . --config Release
 ```
 
-This will create an executable in the ```run/_build``` folder (Unix) or in the ```run/_build/Release``` folder (Windows).
-
+This will create the executable ```run/_build/runLightBender``` on Unix and ```run\_build\Release\runLightBender.exe``` on Windows.
 
 
 Renderings
