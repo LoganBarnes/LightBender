@@ -64,20 +64,6 @@ bin\runLightBender.exe
 ```
 
 
-Manually via CMake (platform independent)
-------------------------------------------
-
-```bash
-cd run
-mkdir _build
-cd _build
-cmake -DCMAKE_GENERATOR_PLATFORM=x64 ../..
-cmake --build . --config Release
-```
-
-This will create the executable ```run/_build/runLightBender``` on Unix and ```run\_build\Release\runLightBender.exe``` on Windows.
-
-
 Renderings
 ----------
 
