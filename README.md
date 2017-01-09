@@ -90,15 +90,14 @@ Renderings
 
 ### Images showcasing the current status of the project
 
-
 ![](renderings/xwing/png/x-wing_front.png)
 ![](renderings/xwing/png/x-wing_under.png)
 ![](renderings/xwing/png/x-wing_back.png)
 
-#### Direct illumination only (no scattering/bouncing of light off objects)
+#### Direct illumination (no scattering or reflecting of light)
 ![](renderings/xwing/png/x-wing_direct.png)
 
-#### Indirect illumination only (light scattered/reflected from objects)
+#### Indirect illumination (light scattered and reflected off objects)
 ![](renderings/xwing/png/x-wing_indirect.png)
 
 #### All illumination
