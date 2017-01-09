@@ -629,8 +629,8 @@ OptixScene::renderSceneGui( )
         stream.str( std::string( ) );
 
         if ( fluxOld[ 0 ] != i.radiantFlux.x
-            | fluxOld[ 1 ] != i.radiantFlux.y
-            | fluxOld[ 2 ] != i.radiantFlux.z )
+            || fluxOld[ 1 ] != i.radiantFlux.y
+            || fluxOld[ 2 ] != i.radiantFlux.z )
         {
 
           i.radiantFlux     = optix::make_float3( fluxOld[ 0 ], fluxOld[ 1 ], fluxOld[ 2 ] );
