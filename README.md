@@ -4,7 +4,7 @@ Light Bender
 
 Testbed for NVIDIA OptiX
 
-![](renderings/xwing/x-wing_both.png)
+![](renderings/xwing/png/x-wing_both.png)
 
 
 Download
@@ -91,5 +91,16 @@ Renderings
 Images showcasing the current status of the project
 
 
-![](renderings/xwing/x-wing_both.ppm)
+![](renderings/xwing/png/x-wing_front.png)
+![](renderings/xwing/png/x-wing_under.png)
+![](renderings/xwing/png/x-wing_back.png)
+
+Direct illumination only (no scattering)
+![](renderings/xwing/png/x-wing_direct.png)
+
+Indirect illumination only (only scattering)
+![](renderings/xwing/png/x-wing_indirect.png)
+
+All illumination
+![](renderings/xwing/png/x-wing_both.png)
 
