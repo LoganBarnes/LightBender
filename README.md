@@ -25,9 +25,9 @@ git submodule update --init --recursive
 Environment
 -----------
 
-Ensure the Vulkan and OptiX SDK locations are added to the environment paths before attempting to build and run.
+Ensure the OptiX SDK locations are added to the environment paths before attempting to build and run.
 
-On unix this can be done by adding the following lines to your .bashrc, .profile, etc. (or manually typing then into the terminal).
+On Unix this can be done by adding the following lines to your .bashrc, .profile, etc. (or manually typing them into the terminal each time).
 
 ```bash
 # CUDA environment
@@ -37,15 +37,9 @@ export LD_LIBRARY_PATH=<path/to/your/cuda>/lib64:$LD_LIBRARY_PATH
 # OptiX
 export OPTIX_SDK=<path/to/your/optix/sdk>
 export LD_LIBRARY_PATH=$OPTIX_SDK/lib64:$LD_LIBRARY_PATH
-
-# Vulkan environment
-export VULKAN_SDK=<path/to/your/vulkan/sdk>
-export PATH=$VULKAN_SDK/bin:$PATH
-export LD_LIBRARY_PATH=$VULKAN_SDK/lib:$LD_LIBRARY_PATH
-export VK_LAYER_PATH=$VULKAN_SDK/etc/explicit_layer.d
 ```
 
-On windows you will have to set any variable that weren't set duing the sdk installation through the environment variables GUI.
+On Windows you will have to set environment variables through the environment variables GUI.
 
 Once the environment variables are set, run the appropriate *configureAndBuild* script from the *run* directory via the terminal or console.
 
@@ -81,7 +75,7 @@ cmake ../..
 cmake --build . --config Release
 ```
 
-This will create an executable in the ```run/_build``` folder or in the ```run/_build/Release``` folder depending on if you are using unix or windows.
+This will create an executable in the ```run/_build``` folder (Unix) or in the ```run/_build/Release``` folder (Windows).
 
 
 
