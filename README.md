@@ -88,19 +88,19 @@ This will create an executable in the ```run/_build``` folder or in the ```run/_
 Renderings
 ----------
 
-Images showcasing the current status of the project
+### Images showcasing the current status of the project
 
 
 ![](renderings/xwing/png/x-wing_front.png)
 ![](renderings/xwing/png/x-wing_under.png)
 ![](renderings/xwing/png/x-wing_back.png)
 
-Direct illumination only (no scattering)
+#### Direct illumination only (no scattering/bouncing of light off objects)
 ![](renderings/xwing/png/x-wing_direct.png)
 
-Indirect illumination only (only scattering)
+#### Indirect illumination only (light scattered/reflected from objects)
 ![](renderings/xwing/png/x-wing_indirect.png)
 
-All illumination
+#### All illumination
 ![](renderings/xwing/png/x-wing_both.png)
 
