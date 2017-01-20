@@ -165,14 +165,6 @@ pathtrace_pinhole_camera( )
       rtTrace( top_object, ray, prd );
 
 
-      if ( prd.done )
-      {
-
-        prd.result += prd.radiance * attenuation;
-        break;
-
-      }
-
       if ( prd.depth >= max_bounces )
       {
 
@@ -185,6 +177,13 @@ pathtrace_pinhole_camera( )
       {
 
         prd.result += prd.radiance * attenuation;
+
+      }
+
+      if ( prd.done )
+      {
+
+        break;
 
       }
 
@@ -354,14 +353,6 @@ pathtrace_orthographic_camera( )
       rtTrace( top_object, ray, prd );
 
 
-      if ( prd.done )
-      {
-
-        prd.result += prd.radiance * attenuation;
-        break;
-
-      }
-
       if ( prd.depth > max_bounces )
       {
 
@@ -374,6 +365,13 @@ pathtrace_orthographic_camera( )
       {
 
         prd.result += prd.radiance * attenuation;
+
+      }
+
+      if ( prd.done )
+      {
+
+        break;
 
       }
 

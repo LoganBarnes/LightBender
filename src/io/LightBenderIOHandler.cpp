@@ -99,7 +99,8 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
   // First allocate the memory for the GL buffer, then attach it to OptiX.
   upGLWrapper_->addBufferNoVAO< float >(
                                         "renderBuffer",
-                                        sizeof( optix::float4 ) * defaultWidth * defaultHeight,
+                                        static_cast< GLsizeiptr >( sizeof( optix::float4 ) )
+                                        * defaultWidth * defaultHeight,
                                         0,
                                         GL_STREAM_DRAW
                                         );
