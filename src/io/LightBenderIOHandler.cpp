@@ -54,7 +54,7 @@ std::string outputFilename = "lightBenderFrame.ppm";
 /////////////////////////////////////////////
 LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
   : ImguiOpenGLIOHandler( world, true, defaultWidth, defaultHeight, false )
-  , currentScene_       ( 0 )
+  , currentScene_       ( 2 )
 {
 
   std::unique_ptr< graphics::Callback > upCallback( new LightBenderCallback( *this ) );
@@ -475,7 +475,8 @@ LightBenderIOHandler::_setScene( )
   }
 
 
-  std::string modelFile = light::MODEL_PATH + "x-wing/x-wing.obj";
+  std::string modelFile = light::MODEL_PATH + "tie_interceptor/obj_format/tie_interceptor.obj";
+//  std::string modelFile = light::MODEL_PATH + "x_wing/x-wing.obj";
 
 
   switch ( currentScene_ )

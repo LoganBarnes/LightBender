@@ -3,10 +3,22 @@
 #include <fstream>
 #include <vector>
 #include <cstring>
+#include <random>
+#include <limits>
 #include "glad/glad.h"
 #include "LightBenderConfig.hpp"
 #include "graphics/Camera.hpp"
 #include "optixMod/optix_math_stream_namespace_mod.h"
+
+
+namespace
+{
+
+std::random_device               rd;
+std::mt19937                     gen( rd( ) );
+std::uniform_int_distribution< unsigned > dis( 0, std::numeric_limits< unsigned >::max( ) );
+
+}
 
 
 // Error check/report helper for users of the C API
@@ -299,6 +311,8 @@ OptixRenderer::setCameraType( int type )
   {
 
     camera = "pathtrace_" + camera;
+
+    context_[ "globalSeed" ]->setUint( dis( gen ) );
 
   }
 

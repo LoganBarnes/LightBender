@@ -132,7 +132,8 @@ OptixModelScene::_buildScene( const std::string &filename )
                                         { mesh.geom_instance },
                                         "Trbvh",
                                         "Bvh",
-                                        optix::make_float3( 0.0f, -0.0f, 5.0f )
+                                        optix::make_float3( 0.0f, 3.0f, 0.0f ),
+                                        optix::make_float3( 0.01f )
                                         );
 
 
@@ -144,7 +145,7 @@ OptixModelScene::_buildScene( const std::string &filename )
   //
   Illuminator illuminator;
   illuminator.center      = optix::normalize( optix::make_float3( 4.0f, 10.0f, 4.0f ) ) * 149.6e9f;
-  illuminator.radiantFlux = optix::make_float3( 4.1e26f ) * 0.01f; // 0.01 for arbitrary atmosphere
+  illuminator.radiantFlux = optix::make_float3( 4.1e26f ) * 0.003f; // 0.003 for arbitrary atmosphere
   illuminator.shape       = LightShape::SPHERE;
   illuminator.radius      = 695.7e6f;
 

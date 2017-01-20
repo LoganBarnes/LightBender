@@ -19,6 +19,8 @@ rtDeclareVariable( rtObject,             top_object,        , );
 
 rtDeclareVariable( unsigned int,         max_bounces,       , );
 rtDeclareVariable( unsigned int,         first_bounce,      , );
+rtDeclareVariable( unsigned int,         globalSeed,        , );
+
 
 //
 // Pinhole camera implementation
@@ -120,6 +122,7 @@ pathtrace_pinhole_camera( )
   float2 jitter;
 
   unsigned seed = tea< 16 >( screenSize.x * launch_index.y + launch_index.x, frame_number );
+  seed += globalSeed;
 
   unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
 
@@ -307,6 +310,7 @@ pathtrace_orthographic_camera( )
   float2 jitter;
 
   unsigned seed = tea< 16 >( screenSize.x * launch_index.y + launch_index.x, frame_number );
+  seed += globalSeed;
 
   unsigned int samples_per_pixel = sqrt_num_samples * sqrt_num_samples;
 

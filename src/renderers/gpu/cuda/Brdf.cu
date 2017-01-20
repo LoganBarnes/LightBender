@@ -166,7 +166,7 @@ closest_hit_simple_shading( )
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
 
-      flux /= M_PIf;
+      flux /= 4.0f;
 
     }
 
@@ -196,7 +196,7 @@ closest_hit_simple_shading( )
       distPow2 *= distPow2;
 
       radiance += ( simpleShadeConstant / M_PIf )          // lambertian pi normalization
-                  * ( flux / ( M_PIf * 4.0f * distPow2 ) ) // inverse square law
+                  * ( flux / ( M_PIf * distPow2 ) ) // inverse square law
                   * cosAngle                               // angle between normal and incident ray
                   * shadow_prd.attenuation;                // attenuation from shadowing objects
 
@@ -316,7 +316,7 @@ closest_hit_bsdf( )
       w_i            /= distToLight; // normalizes w_i
 
       ///\todo: Figure out correct term here
-      flux /= M_PIf;
+      flux /= 4.0f;
 
     }
 
@@ -348,7 +348,7 @@ closest_hit_bsdf( )
       distPow2 *= distPow2;
 
       // bsdf calculation added below
-      localRadiance = ( flux / ( M_PIf * 4.0f * distPow2 ) ) // incident radiance
+      localRadiance = ( flux / ( M_PIf * distPow2 ) ) // incident radiance
                       * cosAngle                             // angle between normal and incident ray
                       * shadow_prd.attenuation;              // attenuation from shadowing objects
 
