@@ -5,7 +5,6 @@
 // Used by all the tutorial cuda files
 //#include "commonStructs.h"
 
-using namespace optix;
 
 #ifdef FLT_MAX
 #undef FLT_MAX

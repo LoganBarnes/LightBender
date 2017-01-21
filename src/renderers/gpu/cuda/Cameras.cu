@@ -40,7 +40,7 @@ void
 pinhole_camera( )
 {
 
-  size_t2 screenSize = output_buffer.size( );
+  optix::size_t2 screenSize = output_buffer.size( );
 
   float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
   float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;
@@ -108,7 +108,7 @@ void
 pathtrace_pinhole_camera( )
 {
 
-  size_t2 screenSize = output_buffer.size( );
+  optix::size_t2 screenSize = output_buffer.size( );
 
   float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
   float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;
@@ -227,7 +227,7 @@ void
 orthographic_camera( )
 {
 
-  size_t2 screenSize = output_buffer.size( );
+  optix::size_t2 screenSize = output_buffer.size( );
 
   float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
   float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;
@@ -295,7 +295,7 @@ void
 pathtrace_orthographic_camera( )
 {
 
-  size_t2 screenSize = output_buffer.size( );
+  optix::size_t2 screenSize = output_buffer.size( );
 
   float2 inv_screen  = 1.0f / make_float2( screenSize ) * 2.0f;
   float2 pixelCorner = make_float2( launch_index ) * inv_screen - 1.0f;

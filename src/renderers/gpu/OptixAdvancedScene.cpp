@@ -155,7 +155,7 @@ OptixAdvancedScene::_buildScene( )
 
 
   illuminator.center      = optix::make_float3( -1.5f, 1.0f, 4.0f );
-  illuminator.radiantFlux = optix::make_float3( 1000.f );
+  illuminator.radiantFlux = optix::make_float3( 600.f );
   illuminator.shape       = LightShape::SPHERE;
   illuminator.radius      = 0.75f;
 

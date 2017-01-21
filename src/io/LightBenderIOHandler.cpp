@@ -54,7 +54,7 @@ std::string outputFilename = "lightBenderFrame.ppm";
 /////////////////////////////////////////////
 LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
   : ImguiOpenGLIOHandler( world, true, defaultWidth, defaultHeight, false )
-  , currentScene_       ( 2 )
+  , currentScene_       ( 1 )
 {
 
   std::unique_ptr< graphics::Callback > upCallback( new LightBenderCallback( *this ) );

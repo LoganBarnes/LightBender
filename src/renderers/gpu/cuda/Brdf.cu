@@ -5,27 +5,81 @@
 #include "RendererObjects.hpp" // should be last to avoid FLT_MAX redefintion warning
 
 
-// Create Orthonormal Basis from normalized vector
+
+//////////////////////////////////////////////////////////////
+/// \brief createONB
+///
+///        Create Orthonormal Basis from normalized vector
+//////////////////////////////////////////////////////////////
 static
 __device__ __inline__
 void
 createONB(
-          const optix::float3 &n,
-          optix::float3       &U,
-          optix::float3       &V
+          const float3 &n, ///< normal
+          float3       &U, ///< output U vector
+          float3       &V  ///< output V vector
           )
 {
-  using namespace optix;
 
   U = cross( n, make_float3( 0.0f, 1.0f, 0.0f ) );
 
   if ( dot( U, U ) < 1.e-3f )
   {
-  U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
+
+    U = cross( n, make_float3( 1.0f, 0.0f, 0.0f ) );
+
   }
 
   U = normalize( U );
   V = cross( n, U );
+
+}
+
+
+
+//////////////////////////////////////////////////////////////
+/// \brief sampleLight
+///
+///        Choose a random point from a spherical light
+///
+/// \return
+//////////////////////////////////////////////////////////////
+static
+__device__ __inline__
+float3
+sampleIlluminator(
+                  unsigned             &seed,        ///< random seed
+                  const SurfaceElement &surfel,      ///< info about the current surface
+                  const Illuminator    &illuminator, ///< info about the curren illuminator
+                  float                *pPdf         ///< output pdf value
+                  )
+{
+
+  float theta = rnd( seed ) * 2 * M_PIf;
+  float u     = rnd( seed ) * 2.0 - 1.0;
+
+  float xyCoeff = sqrt( 1.0 - u * u );
+
+  float3 samplePos = make_float3(
+                                        xyCoeff * cos( theta ),
+                                        xyCoeff * sin( theta ),
+                                        u
+                                        );
+
+  // sample on hemisphere in direction of point
+  if ( dot( samplePos, normalize( surfel.point - illuminator.center ) ) < 0.0f )
+  {
+
+    samplePos = -samplePos;
+
+  }
+
+  *pPdf = M_PIf;
+
+  samplePos = illuminator.center + samplePos * illuminator.radius;
+
+  return samplePos;
+
 }
 
 
@@ -79,13 +133,16 @@ closest_hit_simple_shading( )
 
   const float3 simpleShadeAlbedo = make_float3( 0.8f );
 
+  SurfaceElement surfel;
+
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
-  float3 ffnormal         = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
+  surfel.normal           = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
   float3 radiance = make_float3( 0.0f );
 
-  float3 hitPoint = ray.origin + t_hit * ray.direction;
+  surfel.point = ray.origin + t_hit * ray.direction;
+
 
   // loop vars
   float3 w_i;
@@ -100,34 +157,18 @@ closest_hit_simple_shading( )
     float3 flux     = illuminator.radiantFlux;
 
     float totalDistPow2;
+    float pdf = M_PIf;
+    float mis_weight = 1.0f;
 
     // randomly sample sphere (only light shape for now)
     if ( prd_current.seed != static_cast< unsigned >( -1 ) )
     {
 
-      float theta = rnd( prd_current.seed ) * 2 * M_PIf;
-      float u     = rnd( prd_current.seed ) * 2.0 - 1.0;
-
-      float xyCoeff = sqrt( 1.0 - u * u );
-
-      float3 samplePos = make_float3(
-                                     xyCoeff * cos( theta ),
-                                     xyCoeff * sin( theta ),
-                                     u
-                                     );
-
-      // sample on hemisphere in direction of point
-      if ( dot( samplePos, normalize( hitPoint - lightPos ) ) < 0.0f )
-      {
-
-        samplePos = -samplePos;
-
-      }
-
-      lightPos += samplePos * illuminator.radius;
+      lightPos = sampleIlluminator( prd_current.seed, surfel, illuminator, &pdf );
+//      mis_weight = 0.5f;
 
       // direction and distance to light
-      w_i             = lightPos - hitPoint;
+      w_i             = lightPos - surfel.point;
       distToLightPow2 = dot( w_i, w_i );
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
@@ -137,14 +178,14 @@ closest_hit_simple_shading( )
 
       // lambertian emitter
       ///\todo: Sample by sollid angle for quicker convergance
-      flux *= 0.5f * max( 0.0, dot( -w_i, samplePos ) );
+      flux *= 0.5f * max( 0.0, dot( -w_i, normalize( lightPos - illuminator.center ) ) );
 
     }
     else
     {
 
       // direction and distance to light
-      w_i             = lightPos - hitPoint;
+      w_i             = lightPos - surfel.point;
       distToLightPow2 = dot( w_i, w_i );
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
@@ -157,7 +198,7 @@ closest_hit_simple_shading( )
     }
 
 
-    float cosAngle = dot( ffnormal, w_i );
+    float cosAngle = dot( surfel.normal, w_i );
 
     if ( cosAngle > 0.0f )
     {
@@ -168,7 +209,7 @@ closest_hit_simple_shading( )
 
       // shadow ray
       optix::Ray shadow_ray(
-                            hitPoint,
+                            surfel.point,
                             w_i,
                             shadow_ray_type,
                             scene_epsilon,
@@ -179,10 +220,11 @@ closest_hit_simple_shading( )
       rtTrace( top_shadower, shadow_ray, shadow_prd );
 
 
-      radiance += ( simpleShadeAlbedo / M_PIf )          // lambertian pi normalization
-                  * ( flux / ( M_PIf * totalDistPow2 ) ) // inverse square law
-                  * cosAngle                             // angle between normal and incident ray
-                  * shadow_prd.attenuation;              // attenuation from shadowing objects
+      radiance += ( simpleShadeAlbedo / M_PIf )        // lambertian pi normalization
+                  * ( flux / ( pdf * totalDistPow2 ) ) // inverse square law
+                  * ( mis_weight / pdf )               // importance weight
+                  * cosAngle                           // angle between normal and incident ray
+                  * shadow_prd.attenuation;            // attenuation from shadowing objects
 
     }
 
@@ -207,18 +249,18 @@ closest_hit_simple_shading( )
     if ( rouletteVal <= 0.0f )
     {
 
-      prd_current.origin = hitPoint;
+      prd_current.origin = surfel.point;
 
       float z1 = rnd( prd_current.seed );
       float z2 = rnd( prd_current.seed );
       float3 p;
 
-      cosine_sample_hemisphere( z1, z2, p );
+      optix::cosine_sample_hemisphere( z1, z2, p );
 
       float3 v1, v2;
-      createONB( ffnormal, v1, v2 );
+      createONB( surfel.normal, v1, v2 );
 
-      prd_current.direction    = v1 * p.x + v2 * p.y + ffnormal * p.z;
+      prd_current.direction    = v1 * p.x + v2 * p.y + surfel.normal * p.z;
       prd_current.attenuation *= simpleShadeAlbedo / scatterProb;
       prd_current.countEmitted = false;
 
@@ -255,13 +297,15 @@ void
 closest_hit_bsdf( )
 {
 
+  SurfaceElement surfel;
+
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
-  float3 ffnormal         = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
+  surfel.normal           = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
   float3 radiance = make_float3( 0.0f );
 
-  float3 hitPoint = ray.origin + t_hit * ray.direction;
+  surfel.point = ray.origin + t_hit * ray.direction;
 
   float3 w_o = -ray.direction;
 
@@ -278,34 +322,18 @@ closest_hit_bsdf( )
     float3 flux     = illuminator.radiantFlux;
 
     float totalDistPow2;
+    float pdf = M_PIf;
+    float mis_weight = 1.0f;
 
     // randomly sample sphere (only light shape for now)
     if ( prd_current.seed != static_cast< unsigned >( -1 ) )
     {
 
-      float theta = rnd( prd_current.seed ) * 2.0 * M_PIf;
-      float u     = rnd( prd_current.seed ) * 2.0 - 1.0;
-
-      float xyCoeff = sqrt( 1.0 - u * u );
-
-      float3 samplePos = make_float3(
-                                     xyCoeff * cos( theta ),
-                                     xyCoeff * sin( theta ),
-                                     u
-                                     );
-
-      // sample on hemisphere in direction of point
-      if ( dot( samplePos, normalize( hitPoint - lightPos ) ) < 0.0f )
-      {
-
-        samplePos = -samplePos;
-
-      }
-
-      lightPos += samplePos * illuminator.radius;
+      lightPos = sampleIlluminator( prd_current.seed, surfel, illuminator, &pdf );
+//      mis_weight = 0.5;
 
       // direction and distance to light
-      w_i             = lightPos - hitPoint;
+      w_i             = lightPos - surfel.point;
       distToLightPow2 = dot( w_i, w_i );
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
@@ -315,14 +343,14 @@ closest_hit_bsdf( )
 
       // lambertian emitter
       ///\todo: Sample by sollid angle for quicker convergance
-      flux *= 0.5f * max( 0.0, dot( -w_i, samplePos ) );
+      flux *= 0.5f * max( 0.0, dot( -w_i, normalize( lightPos - illuminator.center ) ) );
 
     }
     else
     {
 
       // direction and distance to light
-      w_i             = lightPos - hitPoint;
+      w_i             = lightPos - surfel.point;
       distToLightPow2 = dot( w_i, w_i );
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
@@ -335,7 +363,7 @@ closest_hit_bsdf( )
     }
 
 
-    float cosAngle = dot( ffnormal, w_i );
+    float cosAngle = dot( surfel.normal, w_i );
 
     float3 localRadiance;
 
@@ -348,7 +376,7 @@ closest_hit_bsdf( )
 
       // shadow ray
       optix::Ray shadow_ray(
-                            hitPoint,
+                            surfel.point,
                             w_i,
                             shadow_ray_type,
                             scene_epsilon,
@@ -360,9 +388,10 @@ closest_hit_bsdf( )
 
 
       // bsdf calculation added below
-      localRadiance = ( flux / ( M_PIf * totalDistPow2 ) ) // incident radiance
-                      * cosAngle                           // angle between normal and incident ray
-                      * shadow_prd.attenuation;            // attenuation from shadowing objects
+      localRadiance = ( flux / ( totalDistPow2 ) ) // incident radiance
+                      * ( mis_weight / pdf )       // importance weighting
+                      * cosAngle                   // angle between normal and incident ray
+                      * shadow_prd.attenuation;    // attenuation from shadowing objects
 
 
       if ( dot( localRadiance, localRadiance ) > 1.0e-9f )
@@ -377,8 +406,8 @@ closest_hit_bsdf( )
         //
         float gammaPow2 = roughness * roughness;
 
-        float nDotL = optix::dot( ffnormal, w_i );
-        float nDotV = optix::dot( ffnormal, w_o );
+        float nDotL = optix::dot( surfel.normal, w_i );
+        float nDotV = optix::dot( surfel.normal, w_o );
 
         float s = optix::dot( w_i, w_o ) - nDotL * nDotV;
 
@@ -419,18 +448,18 @@ closest_hit_bsdf( )
     if ( rouletteVal <= 0.0f )
     {
 
-      prd_current.origin = hitPoint;
+      prd_current.origin = surfel.point;
 
       float z1 = rnd( prd_current.seed );
       float z2 = rnd( prd_current.seed );
       float3 p;
 
-      cosine_sample_hemisphere( z1, z2, p );
+      optix::cosine_sample_hemisphere( z1, z2, p );
 
       float3 v1, v2;
-      createONB( ffnormal, v1, v2 );
+      createONB( surfel.normal, v1, v2 );
 
-      prd_current.direction    = v1 * p.x + v2 * p.y + ffnormal * p.z;
+      prd_current.direction    = v1 * p.x + v2 * p.y + surfel.normal * p.z;
       prd_current.attenuation *= albedo / scatterProb;  // use the albedo as the diffuse response
       prd_current.countEmitted = false;
 

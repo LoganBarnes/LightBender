@@ -14,7 +14,6 @@ struct LightShape
   {
 
     SPHERE,
-//    IRRADIANCE_SPHERE,
     NUM_LIGHT_SHAPES
 
   };
@@ -37,6 +36,23 @@ struct Illuminator
   float3 radiantFlux;            // 12 : 24
   LightShape::LightShapes shape; // 4  : 28
   float radius;                  // 4  : 32
+
+};
+
+
+
+///
+/// \brief The SurfaceElement struct
+///
+struct SurfaceElement
+{
+
+#if defined( __cplusplus )
+  typedef optix::float3 float3;
+#endif
+
+  float3 point;
+  float3 normal;
 
 };
 
