@@ -652,6 +652,7 @@ OptixScene::renderSceneGui( )
 
         }
 
+
         //
         // roughness
         //
@@ -666,6 +667,34 @@ OptixScene::renderSceneGui( )
         {
 
           shape.materials[ 0 ][ "roughness" ]->setFloat( roughness );
+          resetFrameCount( );
+
+        }
+
+
+        //
+        // albedo
+        //
+        optix::float3 ior = shape.materials[ 0 ][ "ior" ]->getFloat3( );
+        float iorOld[ 3 ] = { ior.x, ior.y, ior.z };
+        float iorNew[ 3 ] = { ior.x, ior.y, ior.z };
+
+        stream << "IOR " << name;
+        ImGui::SliderFloat3( stream.str( ).c_str( ), iorNew, 1.0f, 10.0f );
+        stream.str( std::string( ) );
+
+        if (
+            iorOld[ 0 ] != iorNew[ 0 ]
+            || iorOld[ 1 ] != iorNew[ 1 ]
+            || iorOld[ 2 ] != iorNew[ 2 ]
+            )
+        {
+
+          shape.materials[ 0 ][ "ior" ]->setFloat(
+                                                  iorNew[ 0 ],
+                                                  iorNew[ 1 ],
+                                                  iorNew[ 2 ]
+                                                  );
           resetFrameCount( );
 
         }

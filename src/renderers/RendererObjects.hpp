@@ -45,6 +45,23 @@ static __device__ __inline__ uchar4 make_color(const float3& c)
 
 
 
+
+
+static
+__device__ __inline__
+float3
+refract(
+        float3 I,
+        float3 N
+        )
+{
+
+  return I - 2.0 * dot( N, I ) * N;
+
+}
+
+
+
 static
 __device__ __inline__
 float3
@@ -127,6 +144,7 @@ struct PerRayData_pathtrace
   int countEmitted;
   int done;
   int inside;
+  int useSpecular;
 
 };
 

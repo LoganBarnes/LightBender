@@ -47,7 +47,7 @@ intersect( int primIdx )
   float dt = optix::dot( ray.direction, n );
   float t  = ( plane.w - optix::dot( n, ray.origin ) ) / dt;
 
-  if ( t > ray.tmin && t < ray.tmax )
+  if ( dt >= 0.0f && t > ray.tmin && t < ray.tmax )
   {
 
     float3 p  = ray.origin + ray.direction * t;

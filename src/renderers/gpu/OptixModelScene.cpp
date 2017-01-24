@@ -78,9 +78,9 @@ OptixModelScene::_buildScene( const std::string &filename )
   wallMaterial  [ "roughness" ]->setFloat( roughness );
   modelMaterial [ "roughness" ]->setFloat( roughness );
 
-  groundMaterial[ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
-  wallMaterial  [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
-  modelMaterial [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  groundMaterial[ "ior" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  wallMaterial  [ "ior" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  modelMaterial [ "ior" ]->setFloat( 1.5f, 1.5f, 1.5f );
 
 
   //
@@ -106,7 +106,9 @@ OptixModelScene::_buildScene( const std::string &filename )
                                             "NoAccel",
                                             "NoAccel",
                                             optix::make_float3( 0.0f, 4.0f, -8.0f ),
-                                            optix::make_float3( 8.0f, 4.0f, 1.0f )
+                                            optix::make_float3( 8.0f, 4.0f, 1.0f ),
+                                            M_PIf,
+                                            optix::make_float3( 0.0f, 1.0f, 0.0f )
                                             );
 
   //
@@ -119,7 +121,7 @@ OptixModelScene::_buildScene( const std::string &filename )
                                             "NoAccel",
                                             optix::make_float3( -8.0f, 4.0f, 0.0f ),
                                             optix::make_float3( 8.0f, 4.0f, 1.0f ),
-                                            M_PIf * 0.5f,
+                                            M_PIf * -0.5f,
                                             optix::make_float3( 0.0f, 1.0f, 0.0f )
                                             );
 
@@ -149,7 +151,7 @@ OptixModelScene::_buildScene( const std::string &filename )
   //
   Illuminator illuminator;
   illuminator.center      = optix::normalize( optix::make_float3( 4.0f, 10.0f, 4.0f ) ) * 149.6e9f;
-  illuminator.radiantFlux = optix::make_float3( 4.1e26f ) * 0.0025f; // 0.0025f for arbitrary atmosphere
+  illuminator.radiantFlux = optix::make_float3( 4.1e26f ) * 0.002f; // 0.002f for arbitrary atmosphere
   illuminator.shape       = LightShape::SPHERE;
   illuminator.radius      = 695.7e6f;
 

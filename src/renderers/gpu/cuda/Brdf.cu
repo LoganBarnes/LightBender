@@ -84,6 +84,49 @@ sampleIlluminator(
 
 
 
+static
+__device__ __inline__
+float3
+calculateSpecular(
+                  const float3         &V,
+                  const float3         &L,
+                  const float3         &F,
+                  const SurfaceElement &surfel
+                  )
+{
+
+  // roughness -> 'm' in cook-torrance lingo
+  float m = surfel.material.roughness;
+
+  float3 H = normalize( V + L );
+
+  float cosNV = dot( surfel.normal, V );
+  float cosNH = dot( surfel.normal, H );
+  float cosNL = dot( surfel.normal, L );
+  float cosVH = dot( V, H );
+
+  // geometric attenuation
+  float G = min( 1.0f, min( 2.0f * cosNH * cosNV / cosVH, 2.0f * cosNH * cosNL / cosVH ) );
+
+  // microfacet slope distribution
+  float cosNHPow2 = cosNH * cosNH;
+  float mPo2      = m * m;
+
+  float D = ( 1.0 / ( M_PIf * mPo2 * cosNHPow2 * cosNHPow2 ) )
+            * exp( ( cosNHPow2 - 1.0 ) / ( mPo2 * cosNHPow2 ) );
+
+  // return mat.albedo * ( F * D * G ) / ( PI * cosNL * cosNV );
+  // return mat.albedo * F;
+  float3 specular = surfel.material.albedo * ( F * D * G ) / ( M_PIf * cosNL * cosNV );
+
+  float3 diffuse = surfel.material.albedo * ( 1.0 - F ) / M_PIf;
+
+  return diffuse + specular;
+
+} // calculateSpecular
+
+
+
 rtDeclareVariable( float3,               shading_normal,   attribute shading_normal, );
 rtDeclareVariable( float3,               geometric_normal, attribute geometric_normal, );
 
@@ -288,9 +331,9 @@ closest_hit_simple_shading( )
 // 0.71f, 0.62f, 0.53f // clay
 // roughness = 0.3f;
 
-rtDeclareVariable( float3, albedo,            , );
-rtDeclareVariable( float,  roughness,         , );
-rtDeclareVariable( float3, indexOfRefraction, , );
+rtDeclareVariable( float3, albedo,    , );
+rtDeclareVariable( float,  roughness, , );
+rtDeclareVariable( float3, ior,       , );
 
 /////////////////////////////////////////////////////////
 /// \brief closest_hit_bsdf
@@ -300,7 +343,13 @@ void
 closest_hit_bsdf( )
 {
 
+//  float k = 0.5;
+
   SurfaceElement surfel;
+
+  surfel.material.albedo    = albedo;
+  surfel.material.roughness = roughness;
+  surfel.material.IOR       = ior;
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
@@ -311,10 +360,36 @@ closest_hit_bsdf( )
 
   surfel.point = ray.origin + t_hit * ray.direction;
 
-  float3 w_o = -ray.direction;
+  // view vector
+  float3 w_v = -ray.direction;
+
+
+  //
+  // fresnel calculation for current surface
+  //
+  float3 currentIOR = make_float3( 1.0 ); // air (no transmission yet)
+
+  float cosNV = dot( surfel.normal, w_v );
+
+  float3 eta = currentIOR / surfel.material.IOR;
+  float3 cosT;
+
+  // individual fresnel calc for each RGB wavelength
+  float3 T = refract( -w_v, surfel.normal, eta.x );
+  cosT.x = dot( -surfel.normal, T );
+
+  T      = refract( -w_v, surfel.normal, eta.y );
+  cosT.y = dot( -surfel.normal, T );
+
+  T      = refract( -w_v, surfel.normal, eta.z );
+  cosT.z = dot( -surfel.normal, T );
+
+  float3 F = fresnel( make_float3( cosNV ), cosT, currentIOR, surfel.material.IOR );
+
+
 
   // loop vars
-  float3 w_i;
+  float3 w_l; // light vector
   float distToLightPow2, distToLight;
 
   for ( int i = 0; i < illuminators.size( ); ++i )
@@ -337,27 +412,27 @@ closest_hit_bsdf( )
 //      mis_weight = 0.5;
 
       // direction and distance to light
-      w_i             = lightPos - surfel.point;
-      distToLightPow2 = dot( w_i, w_i );
+      w_l             = lightPos - surfel.point;
+      distToLightPow2 = dot( w_l, w_l );
       distToLight     = sqrt( distToLightPow2 );
-      w_i            /= distToLight; // normalizes w_i
+      w_l            /= distToLight; // normalizes w_i
 
       totalDistPow2  = distToLight + illuminator.radius;
       totalDistPow2 *= totalDistPow2;
 
       // lambertian emitter
       ///\todo: Sample by sollid angle for quicker convergance
-      flux *= 0.5f * max( 0.0, dot( -w_i, normalize( lightPos - illuminator.center ) ) );
+      flux *= 0.5f * max( 0.0, dot( -w_l, normalize( lightPos - illuminator.center ) ) );
 
     }
     else
     {
 
       // direction and distance to light
-      w_i             = lightPos - surfel.point;
-      distToLightPow2 = dot( w_i, w_i );
+      w_l             = lightPos - surfel.point;
+      distToLightPow2 = dot( w_l, w_l );
       distToLight     = sqrt( distToLightPow2 );
-      w_i            /= distToLight; // normalizes w_i
+      w_l            /= distToLight; // normalizes w_i
 
       totalDistPow2  = distToLight;
       totalDistPow2 *= totalDistPow2;
@@ -367,7 +442,7 @@ closest_hit_bsdf( )
     }
 
 
-    float cosNL = dot( surfel.normal, w_i );
+    float cosNL = dot( surfel.normal, w_l );
 
     float3 localRadiance;
 
@@ -381,7 +456,7 @@ closest_hit_bsdf( )
       // shadow ray
       optix::Ray shadow_ray(
                             surfel.point,
-                            w_i,
+                            w_l,
                             shadow_ray_type,
                             scene_epsilon,
                             distToLight
@@ -405,59 +480,40 @@ closest_hit_bsdf( )
         // bsdf calculation
         //
 
-        float3 V = w_o;
-        float3 L = w_i;
-        float3 N = surfel.normal;
-
-        float3 currentMediumIOR = make_float3( 1.0 );
-
         //
         // cook-torrance specular
         //
-        float cosNV = dot( surfel.normal, w_o );
+        float3 specular = make_float3( 0.0f );
 
-        float3 eta = currentMediumIOR / indexOfRefraction;
-        float3 cosT;
+        if ( prd_current.useSpecular )
+        {
 
-        float3 T = refract( -w_o, surfel.normal, eta.x );
-        cosT.x = dot( -surfel.normal, T );
+          specular = calculateSpecular( w_v, w_l, F, surfel );
 
-        T = refract( -w_o, surfel.normal, eta.y );
-        cosT.y = dot( -surfel.normal, T );
-
-        T = refract( -w_o, surfel.normal, eta.z );
-        cosT.z = dot( -surfel.normal, T );
-
-        float3 F = fresnel( make_float3( cosNV ), cosT, currentMediumIOR, indexOfRefraction );
-
-//        float3 H = normalize( V + L );
-
-//        float cosNH = dot( N, H );
-//        float cosNL = dot( N, L );
-//        float cosVH = dot( V, H );
+        }
 
         //
         // oren nayar diffuse brdf
         //
-        float gammaPow2 = roughness * roughness;
+        float gammaPow2 = surfel.material.roughness * surfel.material.roughness;
 
-        float nDotL = optix::dot( surfel.normal, w_i );
-        float nDotV = optix::dot( surfel.normal, w_o );
+        float nDotL = optix::dot( surfel.normal, w_l );
+        float nDotV = optix::dot( surfel.normal, w_v );
 
-        float s = optix::dot( w_i, w_o ) - nDotL * nDotV;
+        float s = optix::dot( w_l, w_v ) - nDotL * nDotV;
 
         float t = s <= 0.0f ? 1.0f : max( nDotL, nDotV );
 
         float3 A = ( 1.0
                     - 0.5  * ( gammaPow2 / ( gammaPow2 + 0.33 ) )
-                    + 0.17 * ( gammaPow2 / ( gammaPow2 + 0.13 ) ) * albedo
+                    + 0.17 * ( gammaPow2 / ( gammaPow2 + 0.13 ) ) * surfel.material.albedo
                     ) / M_PIf;
 
         float B = 0.45f * ( gammaPow2 / ( gammaPow2 + 0.09f ) ) / M_PIf;
 
-        float3 onBrdf = albedo * ( A + B * s / t );
+        float3 diffuse = surfel.material.albedo * ( A + B * s / t );
 
-        radiance += localRadiance * onBrdf;
+        radiance += localRadiance * ( diffuse * ( 1.0f - F ) + specular );
 
       }
 
@@ -465,18 +521,25 @@ closest_hit_bsdf( )
 
   }
 
+
   //
   // next ray for indirect light
   //
   if ( prd_current.seed != static_cast< unsigned >( -1 ) )
   {
 
-    float scatterProb = ( albedo.x + albedo.y + albedo.z ) / 3;
+    float reflectProb = ( F.x + F.y + F.z ) / 3;
 
+    float scatterProb = ( albedo.x + albedo.y + albedo.z ) / 3;
+//    scatterProb *= 1.0 - reflectProb;
+
+    //
+    // russian roulette based on scattering probabilities
+    //
     float rouletteVal = rnd( prd_current.seed );
 
     //
-    // scatter
+    // diffuse scatter
     //
     rouletteVal -= scatterProb;
 
@@ -497,11 +560,54 @@ closest_hit_bsdf( )
       prd_current.direction    = v1 * p.x + v2 * p.y + surfel.normal * p.z;
       prd_current.attenuation *= albedo / scatterProb;  // use the albedo as the diffuse response
       prd_current.countEmitted = false;
+      prd_current.useSpecular  = false;
 
       prd_current.radiance = radiance;
       return;
 
     }
+
+
+    //
+    // reflect
+    //
+    rouletteVal -= reflectProb;
+
+    if ( rouletteVal <= 0.0f )
+    {
+
+      //
+      // sample from raised cosine distribution
+      //
+      float z1 = rnd( prd_current.seed );
+      float z2 = rnd( prd_current.seed );
+      float3 p;
+
+      optix::cosine_sample_hemisphere( z1, z2, p );
+
+      float scaling = roughness;
+
+      p.x *= scaling;
+      p.y *= scaling;
+
+      p.z /= scaling;
+
+      p = normalize( p );
+
+      float3 v1, v2;
+      float3 R = reflect( -w_v, surfel.normal );
+      createONB( R, v1, v2 );
+
+      prd_current.origin       = surfel.point;
+      prd_current.direction    =  v1 * p.x + v2 * p.y + R * p.z;
+      prd_current.attenuation *= F / reflectProb;
+//      prd_current.countEmitted = true;
+
+      prd_current.radiance = radiance;
+      return;
+
+    }
+
 
     //
     // absorb
@@ -524,7 +630,8 @@ closest_hit_emission( )
 {
 
   prd_current.radiance = prd_current.countEmitted ? emissionRadiance : make_float3( 0.f );
-  prd_current.done     = true;
+//  prd_current.radiance = emissionRadiance * prd_current.attenuation;
+  prd_current.done = true;
 
 }
 
