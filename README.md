@@ -4,7 +4,7 @@ Light Bender
 
 Testbed for NVIDIA OptiX
 
-![](renderings/xwing/png/x-wing_both.png)
+![](renderings/cornell/cornellPink.png)
 
 
 Download
@@ -69,16 +69,19 @@ Renderings
 
 ### Images showcasing the current status of the project
 
-![](renderings/xwing/png/x-wing_front.png)
-![](renderings/xwing/png/x-wing_under.png)
-![](renderings/xwing/png/x-wing_back.png)
+![](renderings/cornell/pink.png)
+![](renderings/tie/tieModel.png)
+![](renderings/cornell/cornellPink.png)
 
 #### Direct illumination (directly from a light source):
-![](renderings/xwing/png/x-wing_direct.png)
+![](renderings/tie/tie_direct.png)
+![](renderings/cornell/directOnly.png)
 
 #### Indirect illumination (light scattered and reflected off objects):
-![](renderings/xwing/png/x-wing_indirect.png)
+![](renderings/tie/tie_indirect.png)
+![](renderings/cornell/indirectOnly.png)
 
 #### Direct and indirect illumination together:
-![](renderings/xwing/png/x-wing_both.png)
+![](renderings/tie/tie_both.png)
+![](renderings/cornell/both.png)
 
