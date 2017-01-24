@@ -41,6 +41,23 @@ struct Illuminator
 
 
 
+struct Material
+{
+
+#if defined( __cplusplus )
+  typedef optix::float3 float3;
+#endif
+
+  float3 albedo;    // 12 : 12
+  float3 IOR;       // 12 : 24
+  float  roughness; // 4  : 28
+  float  padding;   // 4  : 32
+
+};
+
+
+
+
 ///
 /// \brief The SurfaceElement struct
 ///
@@ -49,10 +66,13 @@ struct SurfaceElement
 
 #if defined( __cplusplus )
   typedef optix::float3 float3;
+  typedef optix::float2 float2;
 #endif
 
-  float3 point;
-  float3 normal;
+  Material material; // 32 : 32
+  float3   point;    // 12 : 44
+  float3   normal;   // 12 : 56
+  float2   padding;  // 8  : 64
 
 };
 

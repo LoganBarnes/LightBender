@@ -37,18 +37,68 @@ static __device__ __inline__ float3 schlick( float nDi, const float3& rgb )
 
 static __device__ __inline__ uchar4 make_color(const float3& c)
 {
-    return make_uchar4( static_cast<unsigned char>(__saturatef(c.z)*255.99f),  /* B */
-                        static_cast<unsigned char>(__saturatef(c.y)*255.99f),  /* G */
-                        static_cast<unsigned char>(__saturatef(c.x)*255.99f),  /* R */
-                        255u);                                                 /* A */
+  return make_uchar4( static_cast<unsigned char>(__saturatef(c.z)*255.99f),  /* B */
+                      static_cast<unsigned char>(__saturatef(c.y)*255.99f),  /* G */
+                      static_cast<unsigned char>(__saturatef(c.x)*255.99f),  /* R */
+                      255u);                                                 /* A */
 }
 
-static __device__ __inline__ float3 fresnel( )
+
+
+static
+__device__ __inline__
+float3
+refract(
+        float3 I,
+        float3 N,
+        float  eta
+        )
 {
 
-  return float3( 1.0 );
+  float nDotI = dot( N, I );
+
+  float k = 1.0f - eta * eta * ( 1.0f - nDotI * nDotI );
+
+  if ( k < 0.0 )
+  {
+      return make_float3( 0.0f );       // or genDType(0.0)
+  }
+  else
+  {
+    return eta * I - ( eta * nDotI + sqrt( k ) ) * N;
+  }
 
 }
+
+
+
+static
+__device__ __inline__
+float3
+fresnel(
+        float3 cosI,
+        float3 cosT,
+        float3 n1,
+        float3 n2
+        )
+{
+
+  float3 n1CosI = n1 * cosI;
+  float3 n2CosT = n2 * cosT;
+
+  float3 n1CosT = n1 * cosT;
+  float3 n2CosI = n2 * cosI;
+
+  float3 Rs = ( n1CosI - n2CosT ) / ( n1CosI + n2CosT );
+  Rs *= Rs;
+
+  float3 Rp = ( n1CosT - n2CosI ) / ( n1CosT + n2CosI );
+  Rp *= Rp;
+
+  return ( Rs + Rp ) * 0.5f;
+
+}
+
 
 struct PerRayData_radiance
 {

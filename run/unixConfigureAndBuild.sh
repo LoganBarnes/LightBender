@@ -2,6 +2,13 @@
 
 STRICT_FLAGS=OFF
 
+function printUsage() {
+  echo "Usage: ./unixConfigureAndBuild.sh <options>";
+  echo "    options:";
+  echo "        -sf or --strict-flags -> enable strict compile flags";
+  echo "        -h  of --help         -> print this message";
+}
+
 # http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 
 # Use -gt 1 to consume two arguments per pass in the loop (e.g. each
@@ -18,8 +25,14 @@ case $key in
     -sf|--strict-flags)
     STRICT_FLAGS=ON
     ;;
+    -h|--help)
+    printUsage;
+    exit;
+    ;;
     *)
     echo "Unrecognized option: '$key'" # unknown option
+    printUsage;
+    exit;
     ;;
 esac
 shift # past argument or value

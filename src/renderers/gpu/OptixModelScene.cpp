@@ -78,6 +78,10 @@ OptixModelScene::_buildScene( const std::string &filename )
   wallMaterial  [ "roughness" ]->setFloat( roughness );
   modelMaterial [ "roughness" ]->setFloat( roughness );
 
+  groundMaterial[ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  wallMaterial  [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  modelMaterial [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+
 
   //
   // ground quad

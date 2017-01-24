@@ -87,6 +87,12 @@ OptixAdvancedScene::_buildScene( )
   bigSphereMaterial   [ "roughness" ]->setFloat( roughness );
   littleSphereMaterial[ "roughness" ]->setFloat( roughness );
 
+  groundMaterial      [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  bigBoxMaterial      [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  littleBoxMaterial   [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  bigSphereMaterial   [ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  littleSphereMaterial[ "indexOfRefraction" ]->setFloat( 1.5f, 1.5f, 1.5f );
+
 
   //
   // ground quad

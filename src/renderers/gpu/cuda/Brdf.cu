@@ -51,7 +51,7 @@ sampleIlluminator(
                   unsigned             &seed,        ///< random seed
                   const SurfaceElement &surfel,      ///< info about the current surface
                   const Illuminator    &illuminator, ///< info about the curren illuminator
-                  float                *pPdf         ///< output pdf value
+                  float               *pPdf          ///< output pdf value
                   )
 {
 
@@ -61,10 +61,10 @@ sampleIlluminator(
   float xyCoeff = sqrt( 1.0 - u * u );
 
   float3 samplePos = make_float3(
-                                        xyCoeff * cos( theta ),
-                                        xyCoeff * sin( theta ),
-                                        u
-                                        );
+                                 xyCoeff * cos( theta ),
+                                 xyCoeff * sin( theta ),
+                                 u
+                                 );
 
   // sample on hemisphere in direction of point
   if ( dot( samplePos, normalize( surfel.point - illuminator.center ) ) < 0.0f )
@@ -80,7 +80,7 @@ sampleIlluminator(
 
   return samplePos;
 
-}
+} // sampleIlluminator
 
 
 
@@ -137,7 +137,8 @@ closest_hit_simple_shading( )
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
-  surfel.normal           = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
+
+  surfel.normal = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
   float3 radiance = make_float3( 0.0f );
 
@@ -157,7 +158,7 @@ closest_hit_simple_shading( )
     float3 flux     = illuminator.radiantFlux;
 
     float totalDistPow2;
-    float pdf = M_PIf;
+    float pdf        = M_PIf;
     float mis_weight = 1.0f;
 
     // randomly sample sphere (only light shape for now)
@@ -173,7 +174,7 @@ closest_hit_simple_shading( )
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
 
-      totalDistPow2 = distToLight + illuminator.radius;
+      totalDistPow2  = distToLight + illuminator.radius;
       totalDistPow2 *= totalDistPow2;
 
       // lambertian emitter
@@ -190,7 +191,7 @@ closest_hit_simple_shading( )
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
 
-      totalDistPow2 = distToLight;
+      totalDistPow2  = distToLight;
       totalDistPow2 *= totalDistPow2;
 
       flux /= 4.0f;
@@ -281,13 +282,15 @@ closest_hit_simple_shading( )
 } // closest_hit_simple_shading
 
 
+
 // albedo:
 // 0.13f // moon
 // 0.71f, 0.62f, 0.53f // clay
 // roughness = 0.3f;
 
-rtDeclareVariable( float3, albedo,    , );
-rtDeclareVariable( float,  roughness, , );
+rtDeclareVariable( float3, albedo,            , );
+rtDeclareVariable( float,  roughness,         , );
+rtDeclareVariable( float3, indexOfRefraction, , );
 
 /////////////////////////////////////////////////////////
 /// \brief closest_hit_bsdf
@@ -301,7 +304,8 @@ closest_hit_bsdf( )
 
   float3 worldGeoNormal   = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, geometric_normal ) );
   float3 worldShadeNormal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
-  surfel.normal           = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
+
+  surfel.normal = faceforward( worldShadeNormal, -ray.direction, worldGeoNormal );
 
   float3 radiance = make_float3( 0.0f );
 
@@ -322,7 +326,7 @@ closest_hit_bsdf( )
     float3 flux     = illuminator.radiantFlux;
 
     float totalDistPow2;
-    float pdf = M_PIf;
+    float pdf        = M_PIf;
     float mis_weight = 1.0f;
 
     // randomly sample sphere (only light shape for now)
@@ -338,7 +342,7 @@ closest_hit_bsdf( )
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
 
-      totalDistPow2 = distToLight + illuminator.radius;
+      totalDistPow2  = distToLight + illuminator.radius;
       totalDistPow2 *= totalDistPow2;
 
       // lambertian emitter
@@ -355,7 +359,7 @@ closest_hit_bsdf( )
       distToLight     = sqrt( distToLightPow2 );
       w_i            /= distToLight; // normalizes w_i
 
-      totalDistPow2 = distToLight;
+      totalDistPow2  = distToLight;
       totalDistPow2 *= totalDistPow2;
 
       flux /= 4.0f;
@@ -363,11 +367,11 @@ closest_hit_bsdf( )
     }
 
 
-    float cosAngle = dot( surfel.normal, w_i );
+    float cosNL = dot( surfel.normal, w_i );
 
     float3 localRadiance;
 
-    if ( cosAngle > 0.0f )
+    if ( cosNL > 0.0f )
     {
 
       // results from shadow ray
@@ -390,7 +394,7 @@ closest_hit_bsdf( )
       // bsdf calculation added below
       localRadiance = ( flux / ( totalDistPow2 ) ) // incident radiance
                       * ( mis_weight / pdf )       // importance weighting
-                      * cosAngle                   // angle between normal and incident ray
+                      * cosNL                   // angle between normal and incident ray
                       * shadow_prd.attenuation;    // attenuation from shadowing objects
 
 
@@ -400,6 +404,37 @@ closest_hit_bsdf( )
         //
         // bsdf calculation
         //
+
+        float3 V = w_o;
+        float3 L = w_i;
+        float3 N = surfel.normal;
+
+        float3 currentMediumIOR = make_float3( 1.0 );
+
+        //
+        // cook-torrance specular
+        //
+        float cosNV = dot( surfel.normal, w_o );
+
+        float3 eta = currentMediumIOR / indexOfRefraction;
+        float3 cosT;
+
+        float3 T = refract( -w_o, surfel.normal, eta.x );
+        cosT.x = dot( -surfel.normal, T );
+
+        T = refract( -w_o, surfel.normal, eta.y );
+        cosT.y = dot( -surfel.normal, T );
+
+        T = refract( -w_o, surfel.normal, eta.z );
+        cosT.z = dot( -surfel.normal, T );
+
+        float3 F = fresnel( make_float3( cosNV ), cosT, currentMediumIOR, indexOfRefraction );
+
+//        float3 H = normalize( V + L );
+
+//        float cosNH = dot( N, H );
+//        float cosNL = dot( N, L );
+//        float cosVH = dot( V, H );
 
         //
         // oren nayar diffuse brdf
