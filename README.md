@@ -4,7 +4,7 @@ Light Bender
 
 Testbed for NVIDIA OptiX
 
-![](renderings/cornell/cornellPink.png)
+![](renderings/cornell/pinkCentered.png)
 
 
 Download
@@ -43,9 +43,13 @@ On Windows you will have to set environment variables through the environment va
 
 Once the environment variables are set, run the appropriate *configureAndBuild* script from the *run* directory via the terminal or console.
 
+Build and Run
+-------------
 
-Unix
-----
+![](renderings/lightBender.gif)
+
+
+### Unix
 
 ```bash
 cd run
@@ -54,8 +58,7 @@ cd run
 ```
 
 
-Windows
--------
+### Windows
 
 ```bash
 cd run
@@ -64,14 +67,15 @@ bin\runLightBender.exe
 ```
 
 
+
 Renderings
 ----------
 
-### Images showcasing the current status of the project
+#### Images showcasing the current status of the project
 
 ![](renderings/cornell/pink.png)
 ![](renderings/tie/tieModel.png)
-![](renderings/cornell/cornellPink.png)
+![](renderings/cornell/greenWall.png)
 
 #### Direct illumination (directly from a light source):
 ![](renderings/tie/tie_direct.png)
