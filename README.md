@@ -2,7 +2,7 @@
 Light Bender
 ============
 
-Testbed for NVIDIA OptiX
+Testbed for NVIDIA OptiX. [Video](https://vimeo.com/200926842)
 
 ![](renderings/cornell/pinkCentered.png)
 
