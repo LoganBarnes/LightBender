@@ -54,7 +54,7 @@ std::string outputFilename = "lightBenderFrame.ppm";
 /////////////////////////////////////////////
 LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
   : ImguiOpenGLIOHandler( world, true, defaultWidth, defaultHeight, false )
-  , currentScene_       ( 1 )
+  , currentScene_       ( 0 )
 {
 
   std::unique_ptr< graphics::Callback > upCallback( new LightBenderCallback( *this ) );
@@ -78,7 +78,7 @@ LightBenderIOHandler::LightBenderIOHandler( shared::World &world )
                            fragShader.c_str( )
                            );
 
-  // temporary
+  // fullscreen buffer
   std::vector< float > vboData =
   {
     -1.0, -1.0, -1.0,

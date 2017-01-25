@@ -660,7 +660,7 @@ OptixScene::renderSceneGui( )
         float roughnessOld = roughness;
 
         stream << "Roughness " << name;
-        ImGui::SliderFloat( stream.str( ).c_str( ), &roughness, 0.0, 1.0 );
+        ImGui::SliderFloat( stream.str( ).c_str( ), &roughness, 0.001f, 1.0f );
         stream.str( std::string( ) );
 
         if ( roughnessOld != roughness )

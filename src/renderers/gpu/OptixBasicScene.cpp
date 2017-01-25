@@ -74,9 +74,9 @@ OptixBasicScene::_buildScene( )
   quadMaterial  [ "roughness" ]->setFloat( roughness );
   sphereMaterial[ "roughness" ]->setFloat( roughness );
 
-  boxMaterial   [ "ior" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  boxMaterial   [ "ior" ]->setFloat( 1.0f, 1.0f, 1.0f );
   quadMaterial  [ "ior" ]->setFloat( 1.5f, 1.5f, 1.5f );
-  sphereMaterial[ "ior" ]->setFloat( 1.5f, 1.5f, 1.5f );
+  sphereMaterial[ "ior" ]->setFloat( 1.0f, 1.0f, 1.0f );
 
   //
   // box

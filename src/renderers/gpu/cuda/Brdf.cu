@@ -264,11 +264,11 @@ closest_hit_simple_shading( )
       rtTrace( top_shadower, shadow_ray, shadow_prd );
 
 
-      radiance += ( simpleShadeAlbedo / M_PIf )        // lambertian pi normalization
-                  * ( flux / ( pdf * totalDistPow2 ) ) // inverse square law
-                  * ( mis_weight / pdf )               // importance weight
-                  * cosAngle                           // angle between normal and incident ray
-                  * shadow_prd.attenuation;            // attenuation from shadowing objects
+      radiance += ( simpleShadeAlbedo / M_PIf ) // lambertian pi normalization
+                  * ( flux / totalDistPow2 )    // inverse square law
+                  * ( mis_weight / pdf )        // importance weight
+                  * cosAngle                    // angle between normal and incident ray
+                  * shadow_prd.attenuation;     // attenuation from shadowing objects
 
     }
 
@@ -467,10 +467,10 @@ closest_hit_bsdf( )
 
 
       // bsdf calculation added below
-      localRadiance = ( flux / ( totalDistPow2 ) ) // incident radiance
-                      * ( mis_weight / pdf )       // importance weighting
+      localRadiance = ( flux / totalDistPow2 )  // incident radiance
+                      * ( mis_weight / pdf )    // importance weighting
                       * cosNL                   // angle between normal and incident ray
-                      * shadow_prd.attenuation;    // attenuation from shadowing objects
+                      * shadow_prd.attenuation; // attenuation from shadowing objects
 
 
       if ( dot( localRadiance, localRadiance ) > 1.0e-9f )
