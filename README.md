@@ -4,7 +4,7 @@ Light Bender
 
 ![](renderings/cornell/pinkCentered.png)
 
-Light Bender is a multi-platform, GPU-accelerated, C++ rendering application written around the NVIDIA [OptiX](https://developer.nvidia.com/optix) Ray Tracing API. [Video](https://vimeo.com/200926842)
+Light Bender is a multi-platform, GPU-accelerated, C++ rendering application written around the [NVIDIA OptiX](https://developer.nvidia.com/optix) Ray Tracing API. [Demo video](https://vimeo.com/200926842)
 
 Key features:
 * Ray tracing and light propagation code is handled on the GPU via OptiX ray tracing functions and CUDA kernels allowing for a significant speed up over CPU-based renderers.
