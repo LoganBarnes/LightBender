@@ -49,7 +49,7 @@ main(
       return driver.exec( argc, argv );
 
     }
-    catch ( std::exception &e )
+    catch ( const std::exception &e )
     {
 
       std::cerr << "ERROR: program failed: " << e.what( ) << std::endl;
